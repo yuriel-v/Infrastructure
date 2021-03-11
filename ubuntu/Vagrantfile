@@ -1,0 +1,49 @@
+$selfansibledev = <<-SCRIPT
+  selfip=`ifconfig | sed -n '/eth1/,$p' | grep -o '10.0.0.[0-9]*' | head -n 1` && \
+  ssh -i /root/id_ansible -o StrictHostKeyChecking=no vagrant@10.0.0.100 "ansible-playbook /shared/ubuntu/playbooks/dev.yml -i \"$selfip,\""
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  config.vm.synced_folder "." "/vagrant", disabled: true
+  config.vm.synced_folder "../shared", "/shared/global", owner: "vagrant"
+  config.vm.synced_folder "./shared", "/shared/ubuntu", owner: "vagrant"
+  
+  config.vm.provision "shell", path: "./shared/global.sh"
+  
+  config.vm.define "dev-linux" do |dvm|
+    dvm.vm.box = "peru/ubuntu-20.04-desktop-amd64"
+    dvm.vm.box_version = "20210222.01"
+
+    dvm.vm.network "private_network", ip: "10.0.0.101"
+	dvm.vm.network "public_network", ip: "192.168.0.78"
+
+	# main development machine, should have access to all others for the sake of git if nothing else
+	dvm.vm.synced_folder "../", "/shared/VMs", owner: "vagrant"
+	dvm.vm.provision "shell", inline: $selfansibledev
+
+	dvm.vm.provider "virtualbox" do |vb|
+	  vb.memory = 4096
+	  vb.cpus = 4
+	  vb.name = "Dev-Linux"
+	  vb.customize ["modifyvm", :id, "--vram", "128"]
+	  vb.customize ["modifyvm", :id, "--graphicscontroller", "vboxsvga"]
+	  vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+	  vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+	  vb.customize ["modifyvm", :id, "--cableconnected3", "on"]
+	end
+  end
+  
+  config.vm.define "ansible" do |ans|
+    ans.vm.network "private_network", ip: "10.0.0.100"
+	ans.vm.provision "shell", path: "./shared/ansible.sh"
+
+	ans.vm.provider "virtualbox" do |vb|
+	  vb.memory = 768
+	  vb.cpus = 2
+	  vb.name = "Ansible"
+	  vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+	  vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+	end
+  end
+end

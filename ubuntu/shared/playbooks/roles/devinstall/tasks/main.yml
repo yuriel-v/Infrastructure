@@ -1,0 +1,10 @@
+---
+- name: Import Python update task
+  import_tasks: 'update_python.yml'
+
+- name: Import add keys task
+  import_tasks: 'add_keys.yml'
+
+- name: Import install task
+  import_tasks: 'install.yml'
+...

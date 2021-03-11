@@ -1,0 +1,18 @@
+---
+- name: Install software properties common
+  apt:
+    name: software-properties-common
+    state: present
+    update_cache: yes
+
+- name: Add deadsnakes repo
+  apt_repository:
+    repo: 'ppa:deadsnakes/ppa'
+    state: present
+    update_cache: yes
+    validate_certs: false
+
+- name: Update Python
+  apt:
+    name: 'python3.9'
+    state: present
