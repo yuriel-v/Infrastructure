@@ -12,15 +12,13 @@ devinstall_repos:
     - 'https://packages.microsoft.com/keys/microsoft.asc'
     - 'https://packages.microsoft.com/repos/vscode stable main'
 
-devinstall_essentials:
+devinstall_packages:
   apt:
+    # essentials
     - insomnia
     - code
-  deb:
-    - https://release.gitkraken.com/linux/gitkraken-amd64.deb  # gitkraken
-
-devinstall_java:
-  apt:
+    # java
     - adoptopenjdk-11-hotspot
     - maven
-  deb: []
+  deb:
+    - https://release.gitkraken.com/linux/gitkraken-amd64.deb  # gitkraken

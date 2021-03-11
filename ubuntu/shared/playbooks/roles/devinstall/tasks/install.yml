@@ -5,62 +5,18 @@
     state: present
     update_cache: yes
 
-# Essentials ----------------------------------------------
-- name: Install apt packages (essentials)
+- name: Install apt packages
   apt:
-    name: "{{ devinstall_essentials['apt'] }}"
+    name: "{{ devinstall_packages['apt'] }}"
     state: present
-  when: devinstall_essentials['apt'] != []
+  when: devinstall_packages['apt'] != []
 
-- name: Install deb packages (essentials)
+- name: Install deb packages
   apt:
-    deb: "{{ devinstall_deb_essential }}"
+    deb: "{{ devinstall_deb }}"
     state: present
-  loop: "{{ devinstall_essentials['deb'] }}"
+  loop: "{{ devinstall_packages['deb'] }}"
   loop_control:
-    loop_var: devinstall_deb_essential
-
-- name: Install classic snaps (essentials)
-  snap:
-    name: "{{ devinstall_essentials['snap_classic'] }}"
-    state: present
-    classic: yes
-  when: devinstall_essentials['snap_classic'] != []
-
-- name: Install snaps (essentials)
-  snap:
-    name: "{{ devinstall_essentials['snap'] }}"
-    state: present
-    classic: no
-  when: devinstall_essentials['snap'] != []
-
-# Java ----------------------------------------------------
-- name: Install apt packages (java)
-  apt:
-    name: "{{ devinstall_java['apt'] }}"
-    state: present
-  when: devinstall_java['apt'] != []
-
-- name: Install deb packages (java)
-  apt:
-    deb: "{{ devinstall_deb_java }}"
-    state: present
-  loop: "{{ devinstall_java['deb'] }}"
-  loop_control:
-    loop_var: devinstall_deb_java
-
-- name: Install classic snaps (java)
-  snap:
-    name: "{{ devinstall_java['snap_classic'] }}"
-    state: present
-    classic: yes
-  when: devinstall_java['snap_classic'] != []
-
-- name: Install snaps (java)
-  snap:
-    name: "{{ devinstall_java['snap'] }}"
-    state: present
-    classic: no
-  when: devinstall_java['snap'] != []
+    loop_var: devinstall_deb
 
 ...
