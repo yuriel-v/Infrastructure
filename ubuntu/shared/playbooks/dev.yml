@@ -8,6 +8,7 @@
     ansible_python_interpreter: '/usr/bin/python3'
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
   roles:
-    - role: devinstall
+    - role: dev_base_ubuntu
       become: yes
+      tags: 'ubuntu'
 ...
