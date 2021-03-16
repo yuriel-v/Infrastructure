@@ -1,8 +1,8 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
-  config.vm.synced_folder "." "/vagrant", disabled: true
   config.vm.synced_folder "../shared", "/shared/global", owner: "vagrant"
   config.vm.synced_folder "./shared", "/shared/ubuntu", owner: "vagrant"
+  config.vm.synced_folder "." "/vagrant", disabled: true  # doesn't work for some fucking reason
   
   config.vm.provision "shell", path: "./shared/global.sh"
   

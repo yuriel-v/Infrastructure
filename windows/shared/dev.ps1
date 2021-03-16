@@ -51,11 +51,11 @@ echo "`n--------------------`n-> Installing VCRedist 2019: You might be prompted
 # basic profile for 'pyenv' command
 echo "`n--------------------`n-> Writing basic 'pyenv' command script for python virtual envs placed under $env:userprofile\envs\"
 try {
-  echo "function Activate-Pyenv`n{`n  param($VenvName)`n  & \`"$env:userprofile\envs\$VenvName\Scripts\Activate.ps1\`" | iex`n}`n`nNew-Item -Path Alias:pyenv -Value Activate-Pyenv | Out-Null" | Out-File -FilePath $env:userprofile\Documents\WindowsPowerShell\profile.ps1 -Append
+  echo "function Activate-Pyenv`n{`n  param(`$VenvName)`n  & \`"$env:userprofile\envs\`$VenvName\Scripts\Activate.ps1\`" | iex`n}`n`nNew-Item -Path Alias:pyenv -Value Activate-Pyenv | Out-Null" | Out-File -FilePath $env:userprofile\Documents\WindowsPowerShell\profile.ps1 -Append
 }
 catch [System.IO.DirectoryNotFoundException] {
   mkdir $env:userprofile\Documents\WindowsPowerShell | Out-Null
-  echo "function Activate-Pyenv`n{`n  param($VenvName)`n  & \`"$env:userprofile\envs\$VenvName\Scripts\Activate.ps1\`" | iex`n}`n`nNew-Item -Path Alias:pyenv -Value Activate-Pyenv | Out-Null" > $env:userprofile\Documents\WindowsPowerShell\profile.ps1
+  echo "function Activate-Pyenv`n{`n  param(`$VenvName)`n  & \`"$env:userprofile\envs\`$VenvName\Scripts\Activate.ps1\`" | iex`n}`n`nNew-Item -Path Alias:pyenv -Value Activate-Pyenv | Out-Null" > $env:userprofile\Documents\WindowsPowerShell\profile.ps1
 }
 catch {
   echo "Failure! The following exception was thrown:`n`n $_"
