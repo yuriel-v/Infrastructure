@@ -21,4 +21,17 @@ devinstall_packages:
     - adoptopenjdk-11-hotspot
     - maven
   deb:
-    - https://release.gitkraken.com/linux/gitkraken-amd64.deb  # gitkraken
+    - 'https://release.gitkraken.com/linux/gitkraken-amd64.deb'  # gitkraken
+
+devinstall_python:
+  url: 'https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tar.xz'
+  dependencies:
+    - zlib1g-dev
+    - libncurses5-dev
+    - libgdbm-dev
+    - libnss3-dev
+    - libssl-dev
+    - libreadline-dev
+    - libffi-dev
+
+devinstall_python_dir: "{{ devinstall_python['url'] | basename | regex_replace('\\.t.*$', '') }}"
