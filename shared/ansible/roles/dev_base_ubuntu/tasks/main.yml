@@ -1,6 +1,7 @@
 ---
-- name: Import Python update task
-  import_tasks: 'update_python.yml'
+- name: Fail on non-Ubuntu host
+  fail: This role only supports Ubuntu hosts
+  when: ansible_lsb['id'] | lower != "ubuntu"
 
 - name: Import add keys task
   import_tasks: 'add_keys.yml'

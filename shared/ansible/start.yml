@@ -1,0 +1,24 @@
+---
+- name: Global VM provisioning play
+  hosts: all
+  roles:
+    - role: global
+      tags: always
+      become: yes
+
+    - role: dev_base_ubuntu
+      tags: dev-master
+      become: yes
+    
+    - role: mysql_install
+      tags: db-mysql
+      become: yes
+    
+    # gaming
+    - role: terraria_server
+      tags: tr-server
+      become: yes
+
+    - role: minecraft_server
+      tags: mc-server
+      become: yes

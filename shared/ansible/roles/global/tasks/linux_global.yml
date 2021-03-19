@@ -1,0 +1,10 @@
+---
+- name: Update Python install
+  include_tasks: update_python.yml
+  become: yes
+
+- name: Ensure net-tools is installed
+  package:
+    name: net-tools
+    state: present
+  become: yes

@@ -1,0 +1,15 @@
+---
+# vars file for global_ubuntu
+
+global_python:
+  url: 'https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tar.xz'
+  dependencies:
+    - zlib1g-dev
+    - libncurses5-dev
+    - libgdbm-dev
+    - libnss3-dev
+    - libssl-dev
+    - libreadline-dev
+    - libffi-dev
+
+global_python_dir: "{{ global_python['url'] | basename | regex_replace('\\.t.*$', '') }}"

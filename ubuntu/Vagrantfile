@@ -13,9 +13,10 @@ Vagrant.configure("2") do |config|
     dvm.vm.network "private_network", ip: "172.16.0.101"
     dvm.vm.network "public_network", ip: "192.168.0.78"  # this one's up to you, could use dhcp if unsure about a static IP
 
+    # essentials: 172.16.0.0
     # main development machine, should have access to all others for the sake of git if nothing else
     dvm.vm.synced_folder "../", "/shared/VMs", owner: "vagrant"
-    dvm.vm.provision "shell", path: "../shared/self-ansible_linux.sh"
+    dvm.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: "dev-master"
 
     dvm.vm.provider "virtualbox" do |vb|
       vb.memory = 4096
@@ -43,6 +44,22 @@ Vagrant.configure("2") do |config|
       vb.name = "Ansible"
       vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
       vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+    end
+  end
+
+  # gaming: 172.16.1.0
+  config.vm.define "terraria" do |tr|
+    tr.vm.network "private_network", ip: "172.16.1.1"
+    tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: "tr-server"
+  end
+  
+  # ansible course
+  config.vm.define "wordpress" do |wp|
+    wp.vm.box = "ubuntu/trusty64"
+    wp.vm.network "private_network", ip: "172.16.0.102"
+    wp.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.name = "Wordpress"
     end
   end
 end

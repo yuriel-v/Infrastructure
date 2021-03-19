@@ -1,0 +1,41 @@
+---
+- name: Install Python 3 dependencies
+  package:
+    name: "{{ global_pydependency }}"
+    state: present
+  loop: global_python['dependencies']
+  loop_control:
+    loop_var: global_pydependency
+
+- name: Destroy previous temporary folder, if existing
+  file:
+    path: '/global_tmp'
+    state: absent
+
+- name: Create temporary folder
+  file:
+    path: '/global_tmp'
+    state: directory
+
+- name: Extract Python release
+  unarchive:
+    remote_src: yes
+    src: "{{ global_python['url'] }}"
+    dest: '/global_tmp'
+
+- name: Run Python configure
+  shell:
+    chdir: "/global_tmp/{{ global_python_dir }}"
+    cmd: "./configure --enable-optimizations"
+
+- name: Install Python from source
+  make:
+    chdir: "/global_tmp/{{ global_python_dir }}"
+    target: install
+    params:
+      DESTDIR: /usr/bin
+
+- name: Recursively delete temporary folder
+  file:
+    path: '/global_tmp'
+    state: absent
