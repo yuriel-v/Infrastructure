@@ -2,13 +2,13 @@
 - name: Ensure xz-utils is installed
   apt:
     name: 'xz-utils'
-    state: present
+    state: latest
     update_cache: yes
 
 - name: Install apt packages
   apt:
     name: "{{ devinstall_packages['apt'] }}"
-    state: present
+    state: latest
   when: devinstall_packages['apt'] != []
 
 - name: Install deb packages
