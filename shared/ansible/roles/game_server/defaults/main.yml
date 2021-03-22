@@ -1,0 +1,9 @@
+---
+gs_overwrite: false
+gs_terraria_motd: "A Minecraft Serv-- no wait, wrong game"
+gs_type: None
+
+gs_terraria:
+  link: 'https://terraria.org/system/dedicated_servers/archives/000/000/042/original/terraria-server-1412.zip?1605039370'
+  install_dir: '/home/vagrant/terraria'
+  port: '7777'

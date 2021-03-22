@@ -5,7 +5,7 @@
     - role: global
       tags: always
       become: yes
-
+    
     - role: dev_base_ubuntu
       tags: dev-master
       become: yes
@@ -15,10 +15,6 @@
       become: yes
     
     # gaming
-    - role: terraria_server
-      tags: tr-server
-      become: yes
-
-    - role: minecraft_server
-      tags: mc-server
+    - role: game_server
+      tags: game-server
       become: yes

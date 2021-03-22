@@ -1,0 +1,7 @@
+---
+# handlers file for minecraft_server
+- name: UFW - Enable
+  ufw:
+    state: enabled
+  async: 10
+  poll: 0
