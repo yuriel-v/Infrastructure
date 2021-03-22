@@ -1,9 +1,13 @@
 [linux]
 172.16.0.101
 172.16.0.102
+172.16.0.200
 
 [wordpress]
 172.16.0.102
+
+[gaming]
+172.16.0.200
 
 [all:vars]
 ansible_user=vagrant

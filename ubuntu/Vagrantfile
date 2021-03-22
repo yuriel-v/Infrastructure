@@ -5,15 +5,28 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "." "/vagrant", disabled: true  # doesn't work for some fucking reason
   
   config.vm.provision "shell", path: "./shared/global.sh"
-  
+
+  # essentials: 172.16.0.100-199
+  config.vm.define "ansible" do |ans|
+    ans.vm.network "private_network", ip: "172.16.0.100", name: "VirtualBox Host-Only Ethernet Adapter"
+    ans.vm.provision "shell", path: "./shared/ansible.sh"
+
+    ans.vm.provider "virtualbox" do |vb|
+      vb.memory = 768
+      vb.cpus = 2
+      vb.name = "Ansible"
+      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+      vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+    end
+  end
+
   config.vm.define "dev-linux" do |dvm|
     dvm.vm.box = "chenhan/ubuntu-desktop-20.04"
     dvm.vm.box_version = "20200424"
 
-    dvm.vm.network "private_network", ip: "172.16.0.101"
+    dvm.vm.network "private_network", ip: "172.16.0.101", name: "VirtualBox Host-Only Ethernet Adapter"
     dvm.vm.network "public_network", ip: "192.168.0.78"  # this one's up to you, could use dhcp if unsure about a static IP
 
-    # essentials: 172.16.0.0
     # main development machine, should have access to all others for the sake of git if nothing else
     dvm.vm.synced_folder "../", "/shared/VMs", owner: "vagrant"
     dvm.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: "dev-master"
@@ -33,24 +46,19 @@ Vagrant.configure("2") do |config|
                     "--medium", "emptydrive"]
     end
   end
-  
-  config.vm.define "ansible" do |ans|
-    ans.vm.network "private_network", ip: "172.16.0.100"
-    ans.vm.provision "shell", path: "./shared/ansible.sh"
 
-    ans.vm.provider "virtualbox" do |vb|
-      vb.memory = 768
-      vb.cpus = 2
-      vb.name = "Ansible"
-      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
-      vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
-    end
-  end
-
-  # gaming: 172.16.1.0
+  # gaming: 172.16.0.200-254
+  # zerotier network: 172.20.0.0/24
   config.vm.define "terraria" do |tr|
-    tr.vm.network "private_network", ip: "172.16.1.1"
-    tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: "tr-server"
+    tr.vm.network "private_network", ip: "172.16.0.200", name: "VirtualBox Host-Only Ethernet Adapter"
+    #tr.vm.network "public_network", ip: "192.168.0.100"
+    tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: 'game-server "gs_type=terraria gs_overwrite=True"'
+
+    tr.vm.provider "virtualbox" do |vb|
+      vb.memory = 4096
+      vb.cpus = 4
+      vb.name = "Terraria-Server-1"
+    end
   end
   
   # ansible course

@@ -1,6 +1,7 @@
 ---
 - name: Fail on non-Ubuntu host
-  fail: This role only supports Ubuntu hosts
+  fail:
+    msg: This role only supports Ubuntu hosts
   when: ansible_lsb['id'] | lower != "ubuntu"
 
 - name: Import add keys task
