@@ -1,0 +1,26 @@
+---
+- name: Test if Linux
+  shell: uname
+  ignore_errors: yes
+  changed_when: no
+  register: global_os
+
+- name: Test if Windows
+  win_shell: 'Write-Output (Get-WMIObject win32_operatingsystem).name'
+  when:
+    - (global_os['stdout'] is defined)
+    - ("linux" not in global_os['stdout'] | default('') | lower)
+  ignore_errors: yes
+  changed_when: no
+  register: global_os_win
+
+- name: "Fail if OS couldn't be identified"
+  fail:
+    msg: "Operating System family could not be identified"
+  when:
+    - ("linux" not in global_os['stdout'] | default('') | lower)
+    - ("windows" not in global_os_win['stdout'] | default('') | lower)
+
+- name: Properly set OS name
+  set_fact:
+    global_os: "{{ 'linux' if 'linux' in global_os['stdout'] | lower else 'windows' }}"
