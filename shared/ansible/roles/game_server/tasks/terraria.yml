@@ -88,7 +88,9 @@
       template:
         src: '{{ gs_terrariad_template }}.sh.j2'
         dest: '{{ gs_terraria["install_dir"] }}/terraria.d/{{ gs_terrariad_template }}.sh'
-        mode: '0666'
+        mode: '0766'
+        owner: root
+        group: root
       loop:
         - launch
         - exit
