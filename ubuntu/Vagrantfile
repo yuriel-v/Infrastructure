@@ -1,5 +1,6 @@
 # Vagrantfile for Ubuntu VMs
 $private_adpt = "VirtualBox Host-Only Ethernet Adapter"
+$public_adpt = "Realtek PCIe GbE Family Controller"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
@@ -32,7 +33,7 @@ Vagrant.configure("2") do |config|
     dvm.vm.box_version = "20200424"
 
     dvm.vm.network "private_network", ip: "172.16.0.101", netmask: "255.255.0.0", name: $private_adpt
-    dvm.vm.network "public_network", ip: "192.168.0.78"  # this one's up to you, could use dhcp if unsure about a static IP
+    dvm.vm.network "public_network", ip: "192.168.0.78", bridge: $public_adpt  # this one's up to you, could use dhcp if unsure about a static IP
 
     # main development machine, should have access to all others for the sake of git if nothing else
     dvm.vm.synced_folder "../", "/shared/VMs", owner: "vagrant"
@@ -61,7 +62,7 @@ Vagrant.configure("2") do |config|
     tr.vm.network "private_network", ip: "172.16.1.100", netmask: "255.255.0.0", name: $private_adpt
 
     # Only set this if you've port forwarded an address and don't want to install ZeroTier One.
-    #tr.vm.network "public_network", ip: "192.168.0.100"
+    # tr.vm.network "public_network", ip: "192.168.0.100", bridge: $public_adpt
     tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: 'game-server "gs_type=terraria gs_overwrite=True"'
 
     tr.vm.provider "virtualbox" do |vb|
