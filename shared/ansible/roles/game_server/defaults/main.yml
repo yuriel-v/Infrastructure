@@ -2,8 +2,16 @@
 gs_overwrite: false
 gs_terraria_motd: "A Minecraft Serv-- no wait, wrong game"
 gs_type: None
+gs_install_zerotier: yes
+gs_server_ip: None
 
 gs_terraria:
   link: 'https://terraria.org/system/dedicated_servers/archives/000/000/042/original/terraria-server-1412.zip?1605039370'
   install_dir: '/home/vagrant/terraria'
   port: '7777'
+  world_name: 'Aurellia'
+  autocreate_size: 2  # 1 = small, 2 = medium, 3 = large
+  seed: '05162020'  # drunk world
+  difficulty: 3  # journey
+  password: '420'
+  max_players: 8

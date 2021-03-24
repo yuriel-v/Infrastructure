@@ -1,1 +1,4 @@
-bash -c "/home/vagrant/terraria/TerrariaServer.bin.x86_64 -ip {{ gs_zt_ip }} -config /home/vagrant/terraria/config.txt"
+#!/usr/bin/bash
+
+tmux new-session -d -s terraria \
+"bash -c '/home/vagrant/terraria/TerrariaServer.bin.x86_64 -ip {{ gs_server_ip }} -config /home/vagrant/terraria/config.txt'"

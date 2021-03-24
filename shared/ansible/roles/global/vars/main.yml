@@ -23,3 +23,5 @@ global_linux_essentials:
   - zip
   - unzip
   - iptables
+  - ufw
+  - tmux

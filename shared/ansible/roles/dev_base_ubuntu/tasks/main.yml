@@ -4,9 +4,11 @@
     msg: This role only supports Ubuntu hosts
   when: ansible_lsb['id'] | lower != "ubuntu"
 
-- name: Import add keys task
-  import_tasks: 'add_keys.yml'
+- block:
+    - name: Import add keys task
+      import_tasks: 'add_keys.yml'
 
-- name: Import install task
-  import_tasks: 'install.yml'
+    - name: Import install task
+      import_tasks: 'install.yml'
+  become: yes
 ...
