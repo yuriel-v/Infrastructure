@@ -74,31 +74,64 @@
 
 - name: Template configurations and launch script
   block:
-    - shell: cat /etc/server-ip.txt
+    - name: Fetch IP
+      shell: cat /etc/server-ip.txt
       register: gs_terraria_zt_ip
       until: gs_terraria_zt_ip is succeeded
       retries: 20
       delay: 3
 
     - set_fact:
-        gs_zt_ip: "{{ gs_terraria_zt_ip['stdout'] }}"
+        gs_server_ip: "{{ gs_terraria_zt_ip['stdout'] }}"
 
-    - template:
-        src: config.txt.j2
+    - name: Template configs
+      template:
+        src: terraria-config.txt.j2
         dest: "{{ gs_terraria['install_dir'] }}/config.txt"
     
-    - template:
-        src: launch.sh.j2
-        dest: /home/vagrant/terraria-launch.sh
+    - name: Create terraria.d folder
+      file:
+        path: '{{ gs_terraria["install_dir"] }}/terraria.d'
+        state: directory
     
-    - file:
+    - name: Template launch and exit scripts
+      template:
+        src: launch.sh.j2
+        dest: '{{ gs_terraria["install_dir"] }}/terraria.d/launch.sh'
+    
+    - template:
+        src: exit.sh.j2
+        dest: '{{ gs_terraria["install_dir"] }}/terraria.d/exit.sh'
+
+    - name: Set modes +x for applicable scripts
+      file:
         path: '{{ gs_terraria["install_dir"] }}/TerrariaServer.bin.x86_64'
         mode: '+x'
         state: file
       become: yes
 
     - file:
-        path: '/home/vagrant/terraria-launch.sh'
+        path: '{{ gs_terraria["install_dir"] }}/terraria.d/launch.sh'
         mode: '+x'
         state: file
+      become: yes
+
+    - file:
+        path: '{{ gs_terraria["install_dir"] }}/terraria.d/exit.sh'
+        mode: '+x'
+        state: file
+      become: yes
+
+    - name: Template Terraria systemd service
+      template:
+        src: terraria.service.j2
+        dest: /etc/systemd/system/terraria.service
+      become: yes
+
+    - name: Start Terraria systemd service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: terraria.service
       become: yes
