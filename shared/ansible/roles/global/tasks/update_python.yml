@@ -27,8 +27,16 @@
         chdir: "/tmp/{{ global_python_dir }}"
         cmd: "./configure --enable-optimizations"
 
+    # this task turned out async because make takes a while to build python.
+    #
+    # since the current instance of ansible is already using whichever python
+    # version is available and will not make use of the newly installed
+    # version in this play, this task turns async so it does not block the
+    # rest of the playbook.
     - name: Install Python from source
       make:
         chdir: "/tmp/{{ global_python_dir }}"
         target: install
       become: yes
+      async: 10
+      poll: 0
