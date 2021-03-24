@@ -14,37 +14,60 @@
       include_vars:
         file: '../../../../private/secrets.yml'
 
-    - git:
+    - name: Fetch ZeroTier git repository
+      git:
         accept_hostkey: yes
         repo: 'https://github.com/zerotier/ZeroTierOne.git'
         dest: '/tmp/ZeroTierOne'
 
-    - make:
+    - name: Build ZeroTier from source
+      make:
         chdir: '/tmp/ZeroTierOne'
 
-    - make:
+    - name: Install ZeroTier binaries
+      make:
         chdir: '/tmp/ZeroTierOne'
         target: install
       become: yes
     
-    - shell: "zerotier-one -d && zerotier-one -i generate"
+    - name: Determine ZeroTier install
+      shell: which zerotier-one
+      changed_when: false
+      register: gs_zt_which
+    
+    - name: Add ZeroTier One as systemd service
+      template:
+        src: zerotier.service.j2
+        dest: /etc/systemd/system/zerotier.service
+      become: yes
+    
+    - name: Start ZeroTier service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: zerotier.service
+      become: yes
+    
+    - name: Generate ZeroTier identity
+      shell: "zerotier-one -i generate"
       changed_when: no
-      
-    - shell: "zerotier-one -q -j join {{ game_server['zt_network'] }}"
+    
+    - name: Join ZeroTier network specified in secrets
+      shell: "zerotier-one -q -j join {{ game_server['zt_network'] }}"
       when: game_server['zt_network'] is defined
       become: yes
       changed_when: no
 
     - name: Fetch ZeroTier IP when available
-      block:
-        - copy:
-            src: fetch-ip.sh
-            dest: /tmp/fetch-ip.sh
-            mode: '0777'
+      copy:
+        src: fetch-ip.sh
+        dest: /tmp/fetch-ip.sh
+        mode: '0777'
         
-        - shell:
-            cmd: nohup /tmp/fetch-ip.sh &
-          become: yes
+    - shell:
+        cmd: nohup /tmp/fetch-ip.sh &
+      become: yes
 
 - name: Fail if ZeroTier is not to be installed and a server IP has not been provided
   when:
