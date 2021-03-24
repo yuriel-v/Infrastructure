@@ -1,3 +1,6 @@
+# Vagrantfile for Ubuntu VMs
+$private_adpt = "VirtualBox Host-Only Ethernet Adapter"
+
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
   config.vm.synced_folder "../shared", "/shared/global", owner: "vagrant"
@@ -6,9 +9,12 @@ Vagrant.configure("2") do |config|
   
   config.vm.provision "shell", path: "./shared/global.sh"
 
-  # essentials: 172.16.0.100-199
+  # essentials: 172.16.0.0/16
+  # reminder on ip/whatever: whatever = subnet mask
+  # 172.16.0.0/16 = 172.16.0.0 with subnet mask 255.255.0.0 (16 network bits, left to right)
+  # ----- Ansible -------------------------------------------------------------
   config.vm.define "ansible" do |ans|
-    ans.vm.network "private_network", ip: "172.16.0.100", name: "VirtualBox Host-Only Ethernet Adapter"
+    ans.vm.network "private_network", ip: "172.16.0.100", netmask: "255.255.0.0", name: $private_adpt
     ans.vm.provision "shell", path: "./shared/ansible.sh"
 
     ans.vm.provider "virtualbox" do |vb|
@@ -20,11 +26,12 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  # ----- Dev-Linux -----------------------------------------------------------
   config.vm.define "dev-linux" do |dvm|
     dvm.vm.box = "chenhan/ubuntu-desktop-20.04"
     dvm.vm.box_version = "20200424"
 
-    dvm.vm.network "private_network", ip: "172.16.0.101", name: "VirtualBox Host-Only Ethernet Adapter"
+    dvm.vm.network "private_network", ip: "172.16.0.101", netmask: "255.255.0.0", name: $private_adpt
     dvm.vm.network "public_network", ip: "192.168.0.78"  # this one's up to you, could use dhcp if unsure about a static IP
 
     # main development machine, should have access to all others for the sake of git if nothing else
@@ -47,10 +54,13 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # gaming: 172.16.0.200-254
-  # zerotier network: 172.20.0.0/24
+  # gaming: 172.16.1.0/16
+  # zerotier network: 172.20.0.0/16 (172.20.0.2 ~ 172.20.255.254)
+  # ----- Terraria ------------------------------------------------------------
   config.vm.define "terraria" do |tr|
-    tr.vm.network "private_network", ip: "172.16.0.200", name: "VirtualBox Host-Only Ethernet Adapter"
+    tr.vm.network "private_network", ip: "172.16.1.100", netmask: "255.255.0.0", name: $private_adpt
+
+    # Only set this if you've port forwarded an address and don't want to install ZeroTier One.
     #tr.vm.network "public_network", ip: "192.168.0.100"
     tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: 'game-server "gs_type=terraria gs_overwrite=True"'
 
@@ -58,16 +68,6 @@ Vagrant.configure("2") do |config|
       vb.memory = 4096
       vb.cpus = 4
       vb.name = "Terraria-Server-1"
-    end
-  end
-  
-  # ansible course
-  config.vm.define "wordpress" do |wp|
-    wp.vm.box = "ubuntu/trusty64"
-    wp.vm.network "private_network", ip: "172.16.0.102"
-    wp.vm.provider "virtualbox" do |vb|
-      vb.memory = 1024
-      vb.name = "Wordpress"
     end
   end
 end
