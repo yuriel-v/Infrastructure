@@ -36,10 +36,14 @@ Global role variables:
   - `starbound`
 - **game_server**: (dict) Secret variable placed on this repo's `/shared/private/secrets.yml` file (global shared folder). Has 1 key-value pair only:
   - zt_network: (string) The network ID to join.
+- **gs_install_zerotier**: (bool) Decides whether or not ZeroTier One will be installed. If this is false, the variable *gs_server_ip* **has** to be provided!
+- **gs_server_ip**: (string) The server's IP to listen to. Automatically defined if ZeroTier is to be installed, else it must be defined manually.
+  - If its value is set to `update` then it will skip the fail check for a valid server IP.
+  - The `update` value is intended to update installs in an automated way.
 
 Terraria role variables:
-- **gs_terraria**: (dict) Dictionary containing the following information:
-  - `link`: (string) Link to the zipped dedicated server instance to install, defaults to terraria.org's v1.4.1.2.
+- **gs_terraria_**: Prefix for the following variables:
+  - `link`: (string) Link to the zipped dedicated server instance to install, defaults to terraria.org's v1.4.2.
   - `install_dir`: (string) Absolute path to the server instance's installation folder. The worlds folder will be created on the exact same folder, save for a "_worlds" appended to the name.
     - Example: By default the path is `/home/vagrant/terraria`, so the worlds folder will be `/home/vagrant/terraria_worlds`.
   - `port`: (string | int) Port number to use, defaults to Terraria's default, 7777.
@@ -56,7 +60,8 @@ Terraria role variables:
     - `3`: Journey (default).
   - `password`: (string) The server password. Defaults to 420, because memes.
   - `max_players`: (int) The maximum number of players allowed at a time. Defaults to Terraria's default, 8.
-- **gs_terraria_motd**: The server's message of the day. Defaults to a parody of Minecraft's default MOTD.
+  - `motd`: (string) The server's message of the day. Defaults to a parody of Minecraft's default MOTD.
+- As was mentioned at the top, the prefix for all of these is `gs_terraria_`, so for instance, to refer to the `link` variable, use `gs_terraria_link`.
 
 More role variables to come as the tasks for Minecraft and Starbound are developed.
 

@@ -65,18 +65,22 @@
         dest: /tmp/fetch-ip.sh
         mode: '0777'
         
-    - shell:
+    - name: Launch background script for fetching ZeroTier IP
+      shell:
         cmd: nohup /tmp/fetch-ip.sh &
       become: yes
 
 - name: Fail if ZeroTier is not to be installed and a server IP has not been provided
   when:
     - not gs_install_zerotier
+    - gs_server_ip != "update"
     - gs_server_ip == "None" or not gs_server_ip | ipv4('address')
   fail:
     msg: "This role requires either that ZeroTier gets installed or that you provide it a valid IP to bind the server to"
 
 - name: Write server address to file in case ZeroTier should not be installed
-  when: not gs_install_zerotier
+  when:
+    - not gs_install_zerotier
+    - gs_server_ip != 'update'
   shell: "echo {{ gs_server_ip | ipv4('address') }} > /etc/server-ip.txt"
   become: yes

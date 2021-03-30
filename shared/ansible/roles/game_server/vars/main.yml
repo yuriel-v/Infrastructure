@@ -1,2 +1,2 @@
 ---
-gs_terraria_dir: "{{ gs_terraria['link'].split('-')[-1] | regex_search('^[^\\.]*') }}"
+gs_terraria_dir: "{{ gs_terraria_link.split('-')[-1] | regex_search('^[^\\.]*') }}"
