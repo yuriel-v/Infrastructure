@@ -4,15 +4,15 @@
 motd={{ gs_terraria_motd }}
 
 # World settings
-world={{ gs_terraria['install_dir'] }}_worlds/{{ gs_terraria['world_name'] }}.wld
-worldpath={{ gs_terraria['install_dir'] }}_worlds
-autocreate={{ gs_terraria['autocreate_size'] }}
-worldname={{ gs_terraria['world_name'] }}
-seed={{ gs_terraria['seed'] }}
+world={{ gs_terraria_install_dir }}_worlds/{{ gs_terraria_world_name }}.wld
+worldpath={{ gs_terraria_install_dir }}_worlds
+autocreate={{ gs_terraria_autocreate_size }}
+worldname={{ gs_terraria_world_name }}
+seed={{ gs_terraria_seed }}
 
 # General settings
-difficulty={{ gs_terraria['difficulty'] }}
-maxplayers={{ gs_terraria['max_players'] }}
+difficulty={{ gs_terraria_difficulty }}
+maxplayers={{ gs_terraria_max_players }}
 secure=1
 language=en-US
 priority=1
@@ -21,7 +21,7 @@ banlist=banlist.txt
 # Network settings
 port=7777
 upnp=1
-password={{ gs_terraria['password'] }}
+password={{ gs_terraria_password }}
 
 # Journey mode settings
 journeypermission_time_setfrozen=2

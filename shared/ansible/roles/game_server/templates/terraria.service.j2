@@ -5,8 +5,8 @@ Description=Server daemon for Terraria
 Type=forking
 User=vagrant
 KillMode=none
-ExecStart=/usr/bin/bash {{ gs_terraria["install_dir"] }}/terraria.d/launch.sh
-ExecStop=/usr/bin/bash {{ gs_terraria["install_dir"] }}/terraria.d/exit.sh
+ExecStart=/usr/bin/bash {{ gs_terraria_install_dir }}/terraria.d/launch.sh
+ExecStop=/usr/bin/bash {{ gs_terraria_install_dir }}/terraria.d/exit.sh
 
 [Install]
 WantedBy=multi-user.target

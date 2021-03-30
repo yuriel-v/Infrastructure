@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 
 tmux new-session -d -s terraria \
-"bash -c '/home/vagrant/terraria/TerrariaServer.bin.x86_64 -ip {{ gs_server_ip }} -config /home/vagrant/terraria/config.txt'"
+"bash -c '{{ gs_terraria_install_dir }}/TerrariaServer.bin.x86_64 -config {{ gs_terraria_install_dir }}/config.txt'"
