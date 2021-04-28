@@ -120,7 +120,7 @@
           systemd:
             daemon_reload: yes
             enabled: yes
-            state: enabled
+            state: started
             name: terraria.service
           become: yes
     
@@ -153,3 +153,8 @@
         src: terraria-variables.yml.j2
         dest: "/shared/global/private/{{ ansible_host }}_terraria-variables.yml"
       become: yes
+      
+- name: Output server IP
+  when: gs_server_ip != "update"
+  debug:
+    msg: "This server's IP is set to {{ gs_server_ip }}"

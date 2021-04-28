@@ -5,8 +5,8 @@ gs_install_zerotier: yes
 gs_server_ip: None
 
 gs_terraria_motd: "A Minecraft Serv-- no wait, wrong game"
-gs_terraria_link: 'https://terraria.org/system/dedicated_servers/archives/000/000/043/original/terraria-server-142.zip?1617024229'
-gs_terraria_install_dir: '/home/vagrant/terraria'
+gs_terraria_link: 'https://terraria.org/system/dedicated_servers/archives/000/000/045/original/terraria-server-1422.zip'
+gs_terraria_install_dir: '/shared/ubuntu/private/Terraria/terraria'
 gs_terraria_port: '7777'
 gs_terraria_world_name: 'Aurellia'
 gs_terraria_autocreate_size: 2  # 1 = small, 2 = medium, 3 = large

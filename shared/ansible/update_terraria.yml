@@ -5,7 +5,7 @@
     gs_type: terraria
     gs_install_zerotier: false
     gs_server_ip: update
-    gs_terraria_link: "https://terraria.org/system/dedicated_servers/archives/000/000/043/original/terraria-server-142.zip?1617024229"
+    gs_terraria_link: "https://terraria.org/system/dedicated_servers/archives/000/000/045/original/terraria-server-1422.zip"
   
   pre_tasks:
     - name: Load variables
