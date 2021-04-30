@@ -2,5 +2,5 @@
 - name: Install Development environment tools on Linux
   hosts: "{{ 'linux' if 'linux' in groups else 'all' }}"
   roles:
-    - dev_base_ubuntu
+    - dev_master
 ...

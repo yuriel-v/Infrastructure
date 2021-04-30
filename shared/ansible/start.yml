@@ -7,7 +7,7 @@
         - general
         - game-server
     
-    - role: dev_base_ubuntu
+    - role: dev_master
       tags: dev-master
     
     - role: mysql_install
