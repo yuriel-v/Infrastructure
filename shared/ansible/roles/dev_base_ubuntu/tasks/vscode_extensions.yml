@@ -1,0 +1,5 @@
+- name: Install VS Code extensions
+  shell: 'code --install-extension {{ devinstall_vscode_extension }}'
+  loop: "{{ devinstall_vscode_extensions }}"
+  loop_control:
+    loop_var: devinstall_vscode_extension

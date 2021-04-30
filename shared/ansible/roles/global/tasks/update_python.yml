@@ -37,6 +37,5 @@
       make:
         chdir: "/tmp/{{ global_python_dir }}"
         target: install
-      become: yes
       async: 10
       poll: 0

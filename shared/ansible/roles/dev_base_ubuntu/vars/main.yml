@@ -22,3 +22,17 @@ devinstall_packages:
     - maven
   deb:
     - 'https://release.gitkraken.com/linux/gitkraken-amd64.deb'  # gitkraken
+
+devinstall_vscode_extensions:
+  - 'ms-python.python'                        # Python
+  - 'ms-python.vscode-pylance'                # Pylance
+  - 'ms-toolsai.jupyter'                      # Jupyter
+  - 'ms-vscode-remote.remote-ssh'             # Remote SSH
+  - 'ms-vscode-remote.remote-ssh-edit'        # Remote SSH Edit plugin
+  - 'VisualStudioExptTeam.vscodeintellicode'  # Visual Studio Intellicode
+  - 'vscjava.vscode-java-pack'                # Java extension pack
+  - 'redhat.java'                             # Java
+  - 'vscjava.vscode-java-debug'               # Java debugger
+  - 'vscjava.vscode-java-dependency'          # Java dependency pack
+  - 'vscjava.vscode-java-test'                # Java testing modules
+  - 'vscjava.vscode-maven'                    # Maven

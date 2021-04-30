@@ -11,8 +11,6 @@
   package:
     name: net-tools
     state: "{{ 'latest' if 'ubuntu' in ansible_lsb['id'] | lower else 'present' }}"
-  become: yes
 
 - name: Update Python install
   import_tasks: update_python.yml
-  become: yes

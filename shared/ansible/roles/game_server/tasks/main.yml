@@ -2,7 +2,6 @@
 - name: Include global tasks
   import_tasks: global.yml
   become: yes
-  tags: always
 
 - name: Include Terraria server tasks
   import_tasks: terraria.yml

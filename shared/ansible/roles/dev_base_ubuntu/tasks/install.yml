@@ -18,5 +18,4 @@
   loop: "{{ devinstall_packages['deb'] }}"
   loop_control:
     loop_var: devinstall_deb
-
 ...

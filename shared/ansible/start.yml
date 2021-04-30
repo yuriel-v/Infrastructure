@@ -3,18 +3,17 @@
   hosts: all
   roles:
     - role: global
-      tags: always
-      become: yes
+      tags:
+        - general
+        - game-server
     
     - role: dev_base_ubuntu
       tags: dev-master
-      become: yes
     
     - role: mysql_install
       tags: db-mysql
-      become: yes
     
     # gaming
     - role: game_server
       tags: game-server
-      become: yes
+  
