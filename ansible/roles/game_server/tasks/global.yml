@@ -1,0 +1,86 @@
+---
+- name: Check for ZeroTier install
+  stat:
+    path: /usr/local/bin/zerotier-one
+  register: gs_ztinstall
+
+- name: Install ZeroTier One
+  when: 
+    - gs_install_zerotier
+    - not gs_ztinstall.stat.exists
+  block:
+    # environment variables are a pain on linux for now, i'll stick to files
+    - name: Look up variables from secrets
+      include_vars:
+        file: '../../../private/secrets.yml'
+
+    - name: Fetch ZeroTier git repository
+      git:
+        accept_hostkey: yes
+        repo: 'https://github.com/zerotier/ZeroTierOne.git'
+        dest: '/tmp/ZeroTierOne'
+
+    - name: Build ZeroTier from source
+      make:
+        chdir: '/tmp/ZeroTierOne'
+
+    - name: Install ZeroTier binaries
+      make:
+        chdir: '/tmp/ZeroTierOne'
+        target: install
+      become: yes
+    
+    - name: Determine ZeroTier install
+      shell: which zerotier-one
+      changed_when: false
+      register: gs_zt_which
+    
+    - name: Add ZeroTier One as systemd service
+      template:
+        src: zerotier.service.j2
+        dest: /etc/systemd/system/zerotier.service
+      become: yes
+    
+    - name: Start ZeroTier service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: zerotier.service
+      become: yes
+    
+    - name: Generate ZeroTier identity
+      shell: "zerotier-one -i generate"
+      changed_when: no
+    
+    - name: Join ZeroTier network specified in secrets
+      shell: "zerotier-one -q -j join {{ game_server['zt_network'] }}"
+      when: game_server['zt_network'] is defined
+      become: yes
+      changed_when: no
+
+    - name: Fetch ZeroTier IP when available
+      copy:
+        src: fetch-ip.sh
+        dest: /tmp/fetch-ip.sh
+        mode: '0777'
+        
+    - name: Launch background script for fetching ZeroTier IP
+      shell:
+        cmd: nohup /tmp/fetch-ip.sh &
+      become: yes
+
+- name: Fail if ZeroTier is not to be installed and a server IP has not been provided
+  when:
+    - not gs_install_zerotier
+    - gs_server_ip != "update"
+    - gs_server_ip == "None" or not gs_server_ip | ipv4('address')
+  fail:
+    msg: "This role requires either that ZeroTier gets installed or that you provide it a valid IP to bind the server to"
+
+- name: Write server address to file in case ZeroTier should not be installed
+  when:
+    - not gs_install_zerotier
+    - gs_server_ip != 'update'
+  shell: "echo {{ gs_server_ip | ipv4('address') }} > /etc/server-ip.txt"
+  become: yes

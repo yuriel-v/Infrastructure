@@ -1,0 +1,22 @@
+---
+- name: Fail on non-Ubuntu host
+  fail:
+    msg: This role only supports Ubuntu hosts
+  when: ansible_lsb['id'] | lower != "ubuntu"
+
+- name: Import tasks
+  when: not devinstall_skiptovscode is defined or not devinstall_skiptovscode
+  become: yes
+  block:
+    - name: Import add keys task
+      import_tasks: 'add_keys.yml'
+
+    - name: Import install task
+      import_tasks: 'install.yml'
+
+- name: Install VS Code extensions
+  when: "'code' in devinstall_packages['apt'] or 'vscode' in devinstall_packages['deb'].keys()"
+  become: yes
+  become_user: vagrant
+  import_tasks: 'vscode_extensions.yml'
+...

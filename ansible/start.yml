@@ -1,0 +1,32 @@
+---
+- name: Global VM provisioning play
+  hosts: all
+  pre_tasks:
+    - name: "Insert Ansible public key onto host"
+      vars:
+        ansible_ssh_pass: 'vagrant'
+      block:
+        - name: "Copy Ansible public key onto target"
+          copy:
+            src: "/home/vagrant/id_ansible.pub"
+            dest: "/home/vagrant/.ssh/id_ansible.pub"
+
+        - name: "Add key to authorized hosts"
+          shell: "cat /home/vagrant/.ssh/id_ansible.pub >> /home/vagrant/.ssh/authorized_keys"
+  
+  roles:
+    - role: global
+      tags:
+        - general
+        - game-server
+    
+    - role: dev_master
+      tags: dev-master
+    
+    - role: mysql_install
+      tags: db-mysql
+
+    - role: game_server
+      tags: game-server
+
+...

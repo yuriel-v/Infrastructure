@@ -1,0 +1,15 @@
+---
+gs_overwrite: false
+gs_type: None
+gs_install_zerotier: yes
+gs_server_ip: None
+
+gs_terraria_motd: "A Minecraft Serv-- no wait, wrong game"
+gs_terraria_install_dir: '/shared/ubuntu/private/Terraria/terraria'
+gs_terraria_port: '7777'
+gs_terraria_world_name: 'Aurellia'
+gs_terraria_autocreate_size: 2  # 1 = small, 2 = medium, 3 = large
+gs_terraria_seed: '05162020'  # drunk world
+gs_terraria_difficulty: 3  # journey
+gs_terraria_password: '420'
+gs_terraria_max_players: 8

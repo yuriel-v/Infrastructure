@@ -1,0 +1,22 @@
+---
+- name: Fail on undefined codename
+  fail:
+    msg: "Undefined codename"
+  when: devinstall_codename == "Undefined!"
+
+- name: Add keys
+  apt_key:
+    url: "{{ devinstall_key.value[0] }}"
+    state: present
+  loop: "{{ devinstall_repos | dict2items }}"
+  loop_control:
+    loop_var: devinstall_key
+
+- name: Add repos
+  apt_repository:
+    repo: "deb {{ devinstall_key2.value[1] }}"
+    filename: "{{ devinstall_key2.key }}"
+    update_cache: no
+  loop: "{{ devinstall_repos | dict2items }}"
+  loop_control:
+    loop_var: devinstall_key2

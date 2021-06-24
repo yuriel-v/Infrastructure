@@ -1,0 +1,15 @@
+---
+# tasks file for global
+- name: Figure out which OS family we're dealing with
+  import_tasks: parse_os.yml
+  run_once: true
+
+- name: Import Linux global tasks, if applicable
+  import_tasks: linux_global.yml
+  when: global_os == "linux"
+  become: yes
+
+- name: Import Windows global tasks, if applicable
+  import_tasks: win_global.yml
+  when: global_os == "windows"
+  become: yes

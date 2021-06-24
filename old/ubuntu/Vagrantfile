@@ -1,0 +1,74 @@
+# Vagrantfile for Ubuntu VMs
+$private_adpt = "VirtualBox Host-Only Ethernet Adapter"
+$public_adpt = "Realtek PCIe GbE Family Controller"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  config.vm.synced_folder "../shared", "/shared/global", owner: "vagrant"
+  config.vm.synced_folder "./shared", "/shared/ubuntu", owner: "vagrant"
+  config.vm.synced_folder "." "/vagrant", disabled: true  # doesn't work for some fucking reason
+  
+  config.vm.provision "shell", path: "./shared/global.sh"
+
+  # essentials: 172.16.0.0/16
+  # reminder on ip/whatever: whatever = subnet mask
+  # 172.16.0.0/16 = 172.16.0.0 with subnet mask 255.255.0.0 (16 network bits, left to right)
+  # ----- Ansible -------------------------------------------------------------
+  config.vm.define "ansible" do |ans|
+    ans.vm.network "private_network", ip: "172.16.0.100", netmask: "255.255.0.0", name: $private_adpt
+    ans.vm.provision "shell", path: "./shared/ansible.sh"
+
+    ans.vm.provider "virtualbox" do |vb|
+      vb.memory = 768
+      vb.cpus = 2
+      vb.name = "Ansible"
+      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+      vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+    end
+  end
+
+  # ----- Dev-Linux -----------------------------------------------------------
+  config.vm.define "dev-linux" do |dvm|
+    dvm.vm.box = "chenhan/ubuntu-desktop-20.04"
+    dvm.vm.box_version = "20200424"
+
+    dvm.vm.network "private_network", ip: "172.16.0.101", netmask: "255.255.0.0", name: $private_adpt
+    dvm.vm.network "public_network", ip: "192.168.0.78", bridge: $public_adpt  # this one's up to you, could use dhcp if unsure about a static IP
+
+    # main development machine, should have access to all others for the sake of git if nothing else
+    dvm.vm.synced_folder "../", "/shared/VMs", owner: "vagrant"
+    dvm.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: "dev-master"
+
+    dvm.vm.provider "virtualbox" do |vb|
+      vb.memory = 4096
+      vb.cpus = 4
+      vb.name = "Dev-Linux"
+      vb.customize ["modifyvm", :id, "--vram", "128"]
+      vb.customize ["modifyvm", :id, "--graphicscontroller", "vboxsvga"]
+      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+      vb.customize ["modifyvm", :id, "--cableconnected2", "on"]
+      vb.customize ["modifyvm", :id, "--cableconnected3", "on"]
+      vb.customize ["storageattach", :id, "--storagectl", "IDE Controller",
+                    "--port", "0", "--device", "1",
+                    "--type", "dvddrive",
+                    "--medium", "emptydrive"]
+    end
+  end
+
+  # gaming: 172.16.1.0/16
+  # zerotier network: 172.20.0.0/16 (172.20.0.2 ~ 172.20.255.254)
+  # ----- Terraria ------------------------------------------------------------
+  config.vm.define "terraria" do |tr|
+    tr.vm.network "private_network", ip: "172.16.1.100", netmask: "255.255.0.0", name: $private_adpt
+
+    # Only set this if you've port forwarded an address and don't want to install ZeroTier One.
+    # tr.vm.network "public_network", ip: "192.168.0.100", bridge: $public_adpt
+    tr.vm.provision "shell", path: "../shared/self-ansible_linux.sh", args: 'game-server "gs_type=terraria gs_overwrite=True"'
+
+    tr.vm.provider "virtualbox" do |vb|
+      vb.memory = 4096
+      vb.cpus = 4
+      vb.name = "Terraria-Server-1"
+    end
+  end
+end

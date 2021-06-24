@@ -1,0 +1,18 @@
+---
+- hosts: terraria
+  vars:
+    gs_overwrite: yes
+    gs_type: terraria
+    gs_install_zerotier: false
+    gs_server_ip: update
+    gs_terraria_link: "https://terraria.org/system/dedicated_servers/archives/000/000/045/original/terraria-server-1422.zip"
+  
+  pre_tasks:
+    - name: Load variables
+      ignore_errors: yes
+      include_vars:
+        file: "../private/{{ ansible_host }}_terraria-variables.yml"
+
+  roles:
+    - role: game_server
+      become: yes

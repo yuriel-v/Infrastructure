@@ -1,0 +1,174 @@
+---
+- name: Fetch install link
+  when: gs_terraria_link is not defined
+  block:
+    - name: Find latest version install link
+      delegate_to: localhost
+      run_once: yes
+      shell: "links -source https://terraria.org/ | grep -i \"pc dedicated\" | head -n 1 | grep -o \"'.*'\" | grep -o \"[^']*\""
+      register: gs_terraria_linkdir
+      changed_when: no
+
+    - name: Put link together
+      set_fact:
+        gs_terraria_link: "https://terraria.org{{ hostvars['localhost']['gs_terraria_linkdir']['stdout'] }}"
+
+- name: Probe old installs
+  stat:
+    path: "{{ gs_terraria_install_dir }}"
+  register: gs_terraria_old
+
+- name: Fail on existing install if not in overwrite mode
+  fail:
+    msg: "Existing Terraria install detected - either delete/move the folder at home/vagrant/terraria or set gs_overwrite to true to clean it up"
+  when:
+    - gs_terraria_old.stat.exists
+    - not gs_overwrite
+
+- name: Ensure install folder is empty
+  block:
+    - name: Delete old install
+      file:
+        path: "{{ gs_terraria_install_dir }}"
+        state: absent
+    
+    - name: Create empty install folder
+      file:
+        path: "{{ gs_terraria_install_dir }}"
+        state: directory
+
+- name: Set up Terraria dedicated server
+  block:
+    - name: Ensure prerequisites are present
+      package:
+        name: "{{ gs_terraria_prerequisite }}"
+        state: present
+      loop:
+        - tmux
+        - ufw
+      loop_control:
+        loop_var: gs_terraria_prerequisite
+
+    - name: Download and extract dedicated server files
+      unarchive:
+        remote_src: yes
+        src: "{{ gs_terraria_link }}"
+        dest: /tmp
+        validate_certs: no
+    
+    - name: Move Linux files to install folder
+      copy:
+        remote_src: yes
+        src: "/tmp/{{ gs_terraria_dir }}/Linux/"
+        dest: "{{ gs_terraria_install_dir }}"
+
+- name: Configure networking
+  when: gs_server_ip != 'update'
+  become: yes
+  block:
+    - name: UFW - SSH
+      ufw:
+        rule: allow
+        port: ssh
+        proto: tcp
+
+    - name: UFW - Terraria port
+      ufw:
+        rule: allow
+        port: "{{ gs_terraria_port | string }}"
+        proto: tcp
+      notify: UFW - Enable
+    
+    # BUG: Enabling UFW, be it here or through the shell module, hangs up the SSH session,
+    # despite actually working and the rule allowing SSH.
+    # I personally have no clue how to fix this, so what'll be done here will be that
+    # enabling UFW should be run as an async handler at the very end of the playbook.
+    # That way, it doesn't matter if the SSH session hangs up or not.
+
+    # module iptables is stupid and doesn't work
+    - name: iptables - Terraria port
+      shell: "iptables -A INPUT -p tcp --dport {{ gs_terraria_port }} -j ACCEPT"
+
+- name: Template configurations and launch script
+  block:
+    - name: Template configs
+      template:
+        src: terraria-config.txt.j2
+        dest: "{{ gs_terraria_install_dir }}/config.txt"
+    
+    - name: Create terraria.d folder
+      file:
+        path: '{{ gs_terraria_install_dir }}/terraria.d'
+        state: directory
+    
+    - name: Template service launch and exit scripts
+      template:
+        src: '{{ gs_terrariad_template }}.sh.j2'
+        dest: '{{ gs_terraria_install_dir }}/terraria.d/{{ gs_terrariad_template }}.sh'
+        mode: '0766'
+        owner: root
+        group: root
+      loop:
+        - launch
+        - exit
+      loop_control:
+        loop_var: gs_terrariad_template
+
+    - name: Set mode +x for Terraria server binaries
+      file:
+        path: '{{ gs_terraria_install_dir }}/TerrariaServer.bin.x86_64'
+        mode: '+x'
+        state: file
+      become: yes
+
+    - name: Template and start Terraria systemd service, if not updating
+      when: gs_server_ip != 'update'
+      block:
+        - name: Template Terraria systemd service
+          template:
+            src: terraria.service.j2
+            dest: /etc/systemd/system/terraria.service
+          become: yes
+
+        - name: Start Terraria systemd service
+          systemd:
+            daemon_reload: yes
+            enabled: yes
+            state: started
+            name: terraria.service
+          become: yes
+    
+    - name: In case of update, break and rebuild the glass-- I mean, the service
+      when: gs_server_ip == 'update'
+      block:
+        - name: Stop Terraria service
+          systemd:
+            daemon_reload: yes
+            enabled: yes
+            state: stopped
+            name: terraria.service
+          become: yes
+
+        - name: Sleep for 10 seconds to allow server to close
+          wait_for:
+            timeout: 10
+          delegate_to: localhost
+        
+        - name: Start Terraria service again
+          systemd:
+            daemon_reload: yes
+            enabled: yes
+            state: started
+            name: terraria.service
+          become: yes
+    
+    - name: Export configurations
+      template:
+        src: terraria-variables.yml.j2
+        dest: "/shared/global/private/{{ ansible_host }}_terraria-variables.yml"
+      become: yes
+      
+- name: Output server IP
+  when: gs_server_ip != "update"
+  debug:
+    msg: "This server's IP is set to {{ gs_server_ip }}"

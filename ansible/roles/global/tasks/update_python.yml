@@ -1,0 +1,44 @@
+---
+- name: Probe current Python install
+  shell: python3 --version
+  register: global_pyver
+
+- name: Update Python
+  vars:
+    global_python_version: "{{ global_pyver['stdout'].split()[-1] | regex_replace('\\.', '') | int }}"
+  when: global_python_version < global_python_latest
+  block:
+    - name: Install Python 3 dependencies
+      package:
+        name: "{{ global_pydependency }}"
+        state: present
+      loop: "{{ global_python['dependencies'] }}"
+      loop_control:
+        loop_var: global_pydependency
+
+    - name: Extract Python release
+      unarchive:
+        remote_src: yes
+        src: "{{ global_python['url'] }}"
+        dest: '/tmp'
+
+    - name: Run Python configure
+      shell:
+        chdir: "/tmp/{{ global_python_dir }}"
+        cmd: "./configure --enable-optimizations"
+
+    # this task turned out async because make takes a while to build python.
+    #
+    # since the current instance of ansible is already using whichever python
+    # version is available and will not make use of the newly installed
+    # version in this play, this task turns async so it does not block the
+    # rest of the playbook.
+    # 
+    # also make is a piece of shit. apparently i have to run the shell itself
+    # to install it.
+    - name: Install Python from source
+      shell:
+        chdir: "/tmp/{{ global_python_dir }}"
+        cmd: make install
+      async: 10
+      poll: 0

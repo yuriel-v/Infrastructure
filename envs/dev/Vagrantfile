@@ -1,0 +1,75 @@
+"""
+Vagrantfile for development environment (DEV).
+Network: 172.16.0.0/16
+Default box: Ubuntu 20.04 LTS (Focal Fossa)
+"""
+
+$ansible_dev = <<-SCRIPT
+echo '-> Enabling password-based SSH for Ansible DEV host'
+echo -e 'Match address 172.16.0.100\n    PasswordAuthentication yes' >> /etc/ssh/sshd_config
+SCRIPT
+
+$esxi_ip = '192.168.0.100'
+$esxi_usr = 'root'
+$esxi_pwd = 'env:ESXI_ROOTPW'
+
+Vagrant.configure('2') do |config|
+  #default configs
+  $name = 'Generic VM'
+  config.vm.box = 'generic/ubuntu2004'
+  config.vm.synced_folder('.', '/vagrant', type: 'nfs', disabled: true)
+  config.vm.provision 'shell', path: './shell/global-ubuntu.sh'
+  config.vm.provision 'shell', inline: $ansible_dev
+  
+  
+  # Ansible
+  config.vm.define 'vm001' do |a|
+    $name = 'vm001'
+    a.vm.network 'private_network', ip: '172.16.0.100', netmask: '255.255.0.0'
+    a.vm.provision 'shell', path: './shell/vm-specs.sh', args: $name + " 'Ansible DEV'"
+    a.vm.provision 'shell', path: './shell/ansible.sh'
+    
+    a.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['DEV Network', 'DEV Network']
+
+      e.guest_name = $name
+      e.guest_memsize = '1024'
+      e.guest_numvcpus = '2'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
+  
+  
+  #Terraria-1
+  config.vm.define 'vm002' do |t|
+    $name = 'vm002'
+    t.vm.network 'private_network', ip: '172.16.0.2', netmask: '255.255.0.0'
+    t.vm.provision 'shell', path: './shell/vm-specs.sh', args: $name + " 'Terraria-1'"
+    t.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true\""
+    
+    t.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['DEV Network', 'DEV Network']
+
+      e.guest_name = $name
+      e.guest_memsize = '4096'
+      e.guest_numvcpus = '4'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
+end

@@ -1,0 +1,21 @@
+---
+- name: Ensure xz-utils is installed
+  apt:
+    name: 'xz-utils'
+    state: latest
+    update_cache: yes
+
+- name: Install apt packages
+  apt:
+    name: "{{ devinstall_packages['apt'] }}"
+    state: latest
+  when: devinstall_packages['apt'] != []
+
+- name: Install deb packages
+  apt:
+    deb: "{{ devinstall_deb.value }}"
+    state: present
+  loop: "{{ devinstall_packages['deb'] | dict2items }}"
+  loop_control:
+    loop_var: devinstall_deb
+...

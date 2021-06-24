@@ -1,5 +1,5 @@
 id_*
 .vagrant/
-ubuntu/shared/private/
-shared/private/
+private/
 .Trash-1000/
+ansible/inv

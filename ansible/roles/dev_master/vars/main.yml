@@ -1,0 +1,34 @@
+---
+devinstall_codename: "{{ hostvars[inventory_hostname]['ansible_lsb']['codename'] | default('Undefined!') }}"
+
+devinstall_repos:
+  adoptopenjdk:
+    - 'https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public'  # key
+    - "https://adoptopenjdk.jfrog.io/adoptopenjdk/deb {{ devinstall_codename }} main"  # dl
+
+devinstall_packages:
+  apt:
+    # essentials
+    - firefox
+    # java
+    - adoptopenjdk-11-hotspot
+    - maven
+  deb:
+    # prefer installing programs through deb packages, as apt keys might be problematic and/or outdated
+    gitkraken: 'https://release.gitkraken.com/linux/gitkraken-amd64.deb'
+    insomnia: 'https://updates.insomnia.rest/downloads/ubuntu/latest'
+    vscode: 'https://go.microsoft.com/fwlink/?LinkID=760868'
+
+devinstall_vscode_extensions:
+  - 'ms-python.python'                        # Python
+  - 'ms-python.vscode-pylance'                # Pylance
+  - 'ms-toolsai.jupyter'                      # Jupyter
+  - 'ms-vscode-remote.remote-ssh'             # Remote SSH
+  - 'ms-vscode-remote.remote-ssh-edit'        # Remote SSH Edit plugin
+  - 'VisualStudioExptTeam.vscodeintellicode'  # Visual Studio Intellicode
+  - 'vscjava.vscode-java-pack'                # Java extension pack
+  - 'redhat.java'                             # Java
+  - 'vscjava.vscode-java-debug'               # Java debugger
+  - 'vscjava.vscode-java-dependency'          # Java dependency pack
+  - 'vscjava.vscode-java-test'                # Java testing modules
+  - 'vscjava.vscode-maven'                    # Maven
