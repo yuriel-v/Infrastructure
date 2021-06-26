@@ -14,6 +14,10 @@ fi
 
 # actually fine to place these on git since password is only accepted among the internal network
 
+echo '-> (self-ansible.sh) Fetching and adding Ansible public key to authorized keys'
+sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 \
+"cat /home/vagrant/id_ansible.pub" | grep -o "^ssh-rsa.*" >> /home/vagrant/.ssh/authorized_keys
+
 echo '-> (self-ansible.sh) Starting global provisioning play'
 # avoid host-checking issues
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "rm /home/vagrant/.ssh/known_hosts"

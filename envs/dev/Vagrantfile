@@ -66,4 +66,56 @@ Vagrant.configure('2') do |config|
       e.guest_guestos = 'ubuntu-64'
     end
   end
+
+
+  # DNS1-Dev
+    config.vm.define 'vm100' do |d|
+    d.vm.hostname = 'vm100'
+    d.vm.network 'private_network', ip: '172.16.0.30', netmask: '255.255.0.0'
+    d.vm.provision 'shell', path: './shell/vm-specs.sh', args: d.vm.hostname + " 'DNS-1 DEV'"
+    d.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general"
+    
+    d.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = d.vm.hostname
+      e.guest_memsize = '768'
+      e.guest_numvcpus = '2'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
+  
+
+  # DNS2-Dev
+    config.vm.define 'vm101' do |d|
+    d.vm.hostname = 'vm101'
+    d.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.0.0'
+    d.vm.provision 'shell', path: './shell/vm-specs.sh', args: d.vm.hostname + " 'DNS-1 DEV'"
+    d.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general"
+    
+    d.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = d.vm.hostname
+      e.guest_memsize = '768'
+      e.guest_numvcpus = '2'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
 end
