@@ -13,3 +13,7 @@ ansible localhost -m openssh_keypair -a "path=/home/vagrant/id_ansible" >> /etc/
 echo "-> (ansible.sh) Cloning Ansible artifacts from GitHub"
 mkdir /home/vagrant/ansible
 git clone https://github.com/yuriel-v/ansible.git /home/vagrant/ansible
+chown -R vagrant:vagrant /home/vagrant/ansible
+
+echo "-> (ansible.sh) Disabling host key checking"
+echo "export ANSIBLE_HOST_KEY_CHECKING=False" >> /etc/profile.d/ansible_no_key_check.sh
