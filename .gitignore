@@ -2,4 +2,4 @@ id_*
 .vagrant/
 private/
 .Trash-1000/
-ansible/inv
+/ansible
