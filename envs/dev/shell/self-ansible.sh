@@ -22,4 +22,4 @@ echo '-> (self-ansible.sh) Starting global provisioning play'
 # avoid host-checking issues
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "rm /home/vagrant/.ssh/known_hosts"
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 \
-"ansible-playbook /home/vagrant/ansible/global.yml -v -i ${selfip}, --tags \"$type\" --extra-vars \"$extra_vars\""
+"ansible-playbook /home/vagrant/ansible/global.yml -i ${selfip}, --tags \"$type\" --extra-vars \"$extra_vars\""

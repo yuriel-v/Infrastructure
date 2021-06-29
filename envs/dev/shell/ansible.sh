@@ -9,6 +9,8 @@ echo -e 'Match address 172.16.0.0/16\n    PasswordAuthentication yes' >> /etc/ss
 
 echo "-> (ansible.sh) Generating SSH key pair"
 ansible localhost -m openssh_keypair -a "path=/home/vagrant/id_ansible" >> /etc/vagrant-shell.log 2>&1
+chown vagrant:vagrant /home/vagrant/id_ansible
+chown vagrant:vagrant /home/vagrant/id_ansible.pub
 
 echo "-> (ansible.sh) Cloning Ansible artifacts from GitHub"
 mkdir /home/vagrant/ansible

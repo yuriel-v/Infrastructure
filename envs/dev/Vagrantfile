@@ -16,13 +16,13 @@ Vagrant.configure('2') do |config|
   
   
   # Ansible
-  config.vm.define 'vm001' do |a|
-    a.vm.hostname = 'vm001'
-    a.vm.network 'private_network', ip: '172.16.0.100', netmask: '255.255.0.0'
-    a.vm.provision 'shell', path: './shell/vm-specs.sh', args: a.vm.hostname + " 'Ansible DEV'"
-    a.vm.provision 'shell', path: './shell/ansible.sh'
+  config.vm.define 'vm001' do |v|
+    v.vm.hostname = 'vm001'
+    v.vm.network 'private_network', ip: '172.16.0.100', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/vm-specs.sh', args: v.vm.hostname + " 'Ansible DEV'"
+    v.vm.provision 'shell', path: './shell/ansible.sh'
     
-    a.vm.provider :vmware_esxi do |e|
+    v.vm.provider :vmware_esxi do |e|
       e.esxi_hostname = $esxi_ip
       e.esxi_username = $esxi_usr
       e.esxi_password = $esxi_pwd
@@ -30,7 +30,7 @@ Vagrant.configure('2') do |config|
       e.esxi_hostport = 22
       e.esxi_virtual_network = ['DEV Network', 'DEV Network']
 
-      e.guest_name = a.vm.hostname
+      e.guest_name = v.vm.hostname
       e.guest_memsize = '1024'
       e.guest_numvcpus = '2'
       
@@ -43,13 +43,13 @@ Vagrant.configure('2') do |config|
   
   
   # Terraria-1
-  config.vm.define 'vm002' do |t|
-    t.vm.hostname = 'vm002'
-    t.vm.network 'private_network', ip: '172.16.0.2', netmask: '255.255.0.0'
-    t.vm.provision 'shell', path: './shell/vm-specs.sh', args: t.vm.hostname + " 'Terraria-1'"
-    t.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true\""
+  config.vm.define 'vm002' do |v|
+    v.vm.hostname = 'vm002'
+    v.vm.network 'private_network', ip: '172.16.0.2', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/vm-specs.sh', args: v.vm.hostname + " 'Terraria-1'"
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true global_vm_shortname='Terraria-1' global_vm_hostname=#{v.vm.hostname}\""
     
-    t.vm.provider :vmware_esxi do |e|
+    v.vm.provider :vmware_esxi do |e|
       e.esxi_hostname = $esxi_ip
       e.esxi_username = $esxi_usr
       e.esxi_password = $esxi_pwd
@@ -57,7 +57,7 @@ Vagrant.configure('2') do |config|
       e.esxi_hostport = 22
       e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e.guest_name = t.vm.hostname
+      e.guest_name = v.vm.hostname
       e.guest_memsize = '4096'
       e.guest_numvcpus = '4'
       
@@ -69,13 +69,12 @@ Vagrant.configure('2') do |config|
 
 
   # DNS1-Dev
-    config.vm.define 'vm100' do |d|
-    d.vm.hostname = 'vm100'
-    d.vm.network 'private_network', ip: '172.16.0.30', netmask: '255.255.0.0'
-    d.vm.provision 'shell', path: './shell/vm-specs.sh', args: d.vm.hostname + " 'DNS-1 DEV'"
-    d.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general"
+  config.vm.define 'vm100' do |v|
+    v.vm.hostname = 'vm100'
+    v.vm.network 'private_network', ip: '172.16.0.30', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='DNS-1 DEV' global_vm_hostname=#{v.vm.hostname}\""
     
-    d.vm.provider :vmware_esxi do |e|
+    v.vm.provider :vmware_esxi do |e|
       e.esxi_hostname = $esxi_ip
       e.esxi_username = $esxi_usr
       e.esxi_password = $esxi_pwd
@@ -83,7 +82,7 @@ Vagrant.configure('2') do |config|
       e.esxi_hostport = 22
       e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e.guest_name = d.vm.hostname
+      e.guest_name = v.vm.hostname
       e.guest_memsize = '768'
       e.guest_numvcpus = '2'
       
@@ -95,13 +94,12 @@ Vagrant.configure('2') do |config|
   
 
   # DNS2-Dev
-    config.vm.define 'vm101' do |d|
-    d.vm.hostname = 'vm101'
-    d.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.0.0'
-    d.vm.provision 'shell', path: './shell/vm-specs.sh', args: d.vm.hostname + " 'DNS-1 DEV'"
-    d.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general"
+  config.vm.define 'vm101' do |v|
+    v.vm.hostname = 'vm101'
+    v.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='DNS-2 DEV' global_vm_hostname=#{v.vm.hostname}\""
     
-    d.vm.provider :vmware_esxi do |e|
+    v.vm.provider :vmware_esxi do |e|
       e.esxi_hostname = $esxi_ip
       e.esxi_username = $esxi_usr
       e.esxi_password = $esxi_pwd
@@ -109,7 +107,56 @@ Vagrant.configure('2') do |config|
       e.esxi_hostport = 22
       e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e.guest_name = d.vm.hostname
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '768'
+      e.guest_numvcpus = '2'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
+
+  # Dev-Linux
+  config.vm.define 'vm010' do |v|
+    v.vm.hostname = 'vm010'
+    v.vm.network 'private_network', ip: '172.16.0.10', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dev-master \"global_vm_shortname='Dev-Linux' global_vm_hostname=#{v.vm.hostname}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '3072'
+      e.guest_numvcpus = '6'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+      e.guest_autostart = 'true'
+    end
+  end
+  
+  # Test
+  config.vm.define 'vm999' do |v|
+    v.vm.hostname = 'vm999'
+    v.vm.network 'private_network', ip: '172.16.0.254', netmask: '255.255.0.0'
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='Test VM' global_vm_hostname='#{v.vm.hostname}'\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
       e.guest_memsize = '768'
       e.guest_numvcpus = '2'
       
