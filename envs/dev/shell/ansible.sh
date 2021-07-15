@@ -5,7 +5,7 @@ apt-add-repository --yes --update ppa:ansible/ansible >> /etc/vagrant-shell.log 
 apt-get -qq install -y ansible >> /etc/vagrant-shell.log 2>&1
 
 echo "-> (ansible.sh) Configuring password access from internal network"
-echo -e 'Match address 172.16.0.0/16\n    PasswordAuthentication yes' >> /etc/ssh/sshd_config
+echo -e '\nPasswordAuthentication no\n\nMatch address 172.16.0.0/16\n    PasswordAuthentication yes' >> /etc/ssh/sshd_config
 
 echo "-> (ansible.sh) Generating SSH key pair"
 ansible localhost -m openssh_keypair -a "path=/home/vagrant/id_ansible" >> /etc/vagrant-shell.log 2>&1
