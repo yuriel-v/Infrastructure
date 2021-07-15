@@ -26,22 +26,22 @@ Vagrant.configure('2') do |config|
     vm999.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true global_vm_shortname='Test VM' global_vm_hostname='#{vm999.vm.hostname}'\""
     vm999.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
     
-    vm999.vm.provider :vmware_esxi do |e199|
-      e199.esxi_hostname = $esxi_ip
-      e199.esxi_username = $esxi_usr
-      e199.esxi_password = $esxi_pwd
+    vm999.vm.provider :vmware_esxi do |e999|
+      e999.esxi_hostname = $esxi_ip
+      e999.esxi_username = $esxi_usr
+      e999.esxi_password = $esxi_pwd
 
-      e199.clone_from_vm = 'vm000'
-      e199.esxi_hostport = 22
-      e199.esxi_virtual_network = ['VM Network', 'DEV Network']
+      e999.clone_from_vm = 'vm000'
+      e999.esxi_hostport = 22
+      e999.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e199.guest_name = vm999.vm.hostname
-      e199.guest_memsize = '4096'
-      e199.guest_numvcpus = '2'
+      e999.guest_name = vm999.vm.hostname
+      e999.guest_memsize = '4096'
+      e999.guest_numvcpus = '2'
       
-      e199.guest_snapshot_includememory = 'false'
-      e199.guest_snapshot_quiesced = 'false'
-      e199.guest_guestos = 'ubuntu-64'
+      e999.guest_snapshot_includememory = 'false'
+      e999.guest_snapshot_quiesced = 'false'
+      e999.guest_guestos = 'ubuntu-64'
     end
   end
 
