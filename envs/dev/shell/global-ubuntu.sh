@@ -2,7 +2,7 @@
 echo '-> Running global script'
 echo -e '-> Please note that the apt related commands will be logged to /etc/vagrant-shell.log\n'
 
-echo '-> Adding DNS Servers - Stage 1'
+echo '-> Adding DNS Servers'
 echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
 
 echo '-> Disabling IPv6'
@@ -19,16 +19,6 @@ echo 'PubKeyAuthentication yes' >> /etc/ssh/sshd_config
 
 echo '-> Updating apt cache'
 apt-get update >> /etc/vagrant-shell.log 2>&1
-
-echo '-> Adding DNS Servers - Stage 2'
-apt-get install -y resolvconf >> /etc/vagrant-shell.log 2>&1
-systemctl enable resolvconf.service > /dev/null 2>&1
-systemctl start resolvconf.service > /dev/null 2>&1
-
-echo 'search yuriel.net' >> /etc/resolvconf/resolv.conf.d/head
-echo -e 'nameserver 172.16.0.30\nnameserver 172.16.0.31\nnameserver 8.8.8.8\n' >> /etc/resolvconf/resolv.conf.d/head
-resolvconf --enable-updates
-resolvconf -u
 
 echo '-> Upgrading packages'
 apt-get upgrade -y >> /etc/vagrant-shell.log 2>&1
