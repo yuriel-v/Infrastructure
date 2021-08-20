@@ -36,21 +36,23 @@
 
 type=$2
 extra_vars=$3
-selfip=`hostname -I | grep -o "172\.16\.[0-9]*\.[0-9]*"`
 network=0
 
 if [ "$1" = "prd" ]; then
   network=1
 fi
 
+selfip=`ip a | grep 'inet.*' | grep '.*scope global' | grep -v 'dynamic' | grep -o "172\.16\.$network\.[0-9]*" | grep -v "172\.16\.$network\.255" | tail -n 1`
+
 # actually fine to place these on git since password is only accepted among the internal network
 
 echo '-> (self-ansible.sh) Fetching and adding Ansible public key to authorized keys'
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 \
-"cat /home/vagrant/id_ansible.pub" | grep -o "^ssh-rsa.*" >> /home/vagrant/.ssh/authorized_keys
+cat_cmd="cat /home/vagrant/.ssh/ansible/id_ansible.pub"
+sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 $cat_cmd | grep -o "^ssh-rsa.*" >> /home/vagrant/.ssh/authorized_keys
 
 echo '-> (self-ansible.sh) Starting global provisioning play'
 # avoid host-checking issues
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "rm /home/vagrant/.ssh/known_hosts"
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@172.16.$network.100 \
-"ansible-playbook /home/vagrant/ansible/global.yml -i ${selfip}, --tags \"$type\" --extra-vars \"$extra_vars\""
+# sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "rm /home/vagrant/.ssh/known_hosts"
+ansible_cmd="ansible-playbook /home/vagrant/ansible/global.yml -i ${selfip}, --tags \"$type\" --extra-vars \"$extra_vars\""
+sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "$ansible_cmd"
+

@@ -2,9 +2,12 @@
 Vagrantfile for development environment (DEV).
 Network: 172.16.0.0/16
 Default box: Ubuntu 20.04 LTS (Focal Fossa)
+
+Uses the plugin 'vmware_esxi' for Vagrant. Link below:
+https://github.com/josenk/vagrant-vmware-esxi
 """
 
-$esxi_ip = '192.168.0.100'
+$esxi_ip = '172.16.0.101'
 $esxi_usr = 'root'
 $esxi_pwd = 'env:ESXI_ROOTPW'
 
@@ -18,233 +21,310 @@ Vagrant.configure('2') do |config|
   config.vm.box = 'esxi_clone/dummy'
   config.vm.synced_folder('.', '/vagrant', type: 'nfs', disabled: true)
 
-  # --------------- General purpose ---------------
+
+  # --------------- LAB: General purpose ---------------
   # Test
-  config.vm.define 'vm999' do |vm999|
-    vm999.vm.hostname = 'vm999'
-    vm999.vm.network 'private_network', ip: '172.16.0.222', netmask: '255.255.0.0'
-    vm999.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true global_vm_shortname='Test VM' global_vm_hostname='#{vm999.vm.hostname}'\""
-    vm999.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
+  config.vm.define 'vm999' do |v|
+    v.vm.hostname = 'vm999'
+    v.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.255.0', gateway: '172.16.0.1'
     
-    vm999.vm.provider :vmware_esxi do |e999|
-      e999.esxi_hostname = $esxi_ip
-      e999.esxi_username = $esxi_usr
-      e999.esxi_password = $esxi_pwd
+    $vm999_dns_vars = "'dns_server_type': 'slave', 'dns_server_masters': ['172.16.0.30']"
+    $vm999_global_vars = "'global_vm_shortname': 'Test VM', 'global_vm_hostname': '#{v.vm.hostname}'"
+    
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dns-server \"{#{$vm999_dns_vars}, #{$vm999_global_vars}}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
 
-      e999.clone_from_vm = 'vm000'
-      e999.esxi_hostport = 22
-      e999.esxi_virtual_network = ['VM Network', 'DEV Network']
+      e.clone_from_vm = 't1_dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e999.guest_name = vm999.vm.hostname
-      e999.guest_memsize = '4096'
-      e999.guest_numvcpus = '2'
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '8192'
+      e.guest_numvcpus = '6'
       
-      e999.guest_snapshot_includememory = 'false'
-      e999.guest_snapshot_quiesced = 'false'
-      e999.guest_guestos = 'ubuntu-64'
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
     end
   end
 
 
-  # Template
-  config.vm.define 'vm000' do |vm000|
-    vm000.vm.hostname = 'vm000'
-    vm000.vm.box = 'generic/ubuntu2004'
-    vm000.vm.network 'private_network', ip: '172.16.1.2', netmask: '255.255.0.0'
+  # --------------- General purpose ---------------
+  # Nexus
+  config.vm.define 'vm002' do |v|
+    v.vm.hostname = 'vm002'
+    v.vm.network 'private_network', ip: '172.16.0.201', netmask: '255.255.255.0', gateway: '172.16.0.1'
+    # v.vm.network 'private_network', ip: '172.16.1.200', netmask: '255.255.255.0'
     
-    vm000.vm.provision 'shell', path: './shell/global-ubuntu.sh', args: 'yes'
-    vm000.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev template-vm \"global_vm_shortname='Template-1 DEV' global_vm_hostname='#{vm000.vm.hostname}'\""
-    vm000.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
-    vm000.vm.provision 'shell', inline: $wget_insecure_key
-    # the above removes the Ansible public key, allowing for a perfect template
-    # when any other machine runs self-ansible.sh, it'll be re-added
-    
-    vm000.ssh.insert_key = false
+    $vm002_devlinux_vars = "'devinstall_remdesk': 'rdp'"
+    $vm002_global_vars = "'global_vm_shortname': 'Nexus', 'global_vm_hostname': '#{v.vm.hostname}'"
 
-    vm000.vm.provider :vmware_esxi do |e000|
-      e000.esxi_hostname = $esxi_ip
-      e000.esxi_username = $esxi_usr
-      e000.esxi_password = $esxi_pwd
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dev-master \"{#{$vm002_devlinux_vars}, #{$vm002_global_vars}}\""
+
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
       
-      e000.esxi_hostport = 22
-      e000.esxi_virtual_network = ['VM Network', 'DEV Network']
+      e.clone_from_vm = 't1_dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e000.guest_name = vm000.vm.hostname
-      e000.guest_memsize = '1024'
-      e000.guest_numvcpus = '2'
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '6144'
+      e.guest_numvcpus = '6'
 
-      e000.guest_snapshot_includememory = 'false'
-      e000.guest_snapshot_quiesced = 'false'
-      e000.guest_guestos = 'ubuntu-64'
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
     end
   end
 
 
   # Ansible
-  config.vm.define 'vm001' do |vm001|
-    vm001.vm.hostname = 'vm001'
-    vm001.vm.network 'private_network', ip: '172.16.0.100', netmask: '255.255.0.0'
-    # vm001.vm.provision 'shell', path: './shell/vm-specs.sh', args: vm001.vm.hostname + " 'Ansible DEV'"
-    vm001.vm.provision 'shell', path: './shell/ansible.sh'
-    vm001.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='Ansible DEV' global_vm_hostname='#{vm001.vm.hostname}'\""
-    vm001.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
-    
-    vm001.vm.provider :vmware_esxi do |e001|
-      e001.esxi_hostname = $esxi_ip
-      e001.esxi_username = $esxi_usr
-      e001.esxi_password = $esxi_pwd
-      
-      e001.clone_from_vm = 'vm000'
-      e001.esxi_hostport = 22
-      e001.esxi_virtual_network = ['DEV Network', 'DEV Network']
+  config.vm.define 'vm001' do |v|
+    v.vm.hostname = 'vm001'
+    v.vm.network 'private_network', ip: '172.16.0.100', netmask: '255.255.255.0', gateway: '172.16.0.1'
 
-      e001.guest_name = vm001.vm.hostname
-      e001.guest_memsize = '1024'
-      e001.guest_numvcpus = '2'
+    $vm001_global_vars = "'global_vm_shortname': 'Ansible DEV', 'global_vm_hostname': '#{v.vm.hostname}'"
+
+    v.vm.provision 'shell', path: './shell/ansible.sh'
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"{#{$vm001_global_vars}}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
       
-      e001.guest_snapshot_includememory = 'false'
-      e001.guest_snapshot_quiesced = 'false'
-      e001.guest_guestos = 'ubuntu-64'
-      e001.guest_autostart = 'true'
+      e.clone_from_vm = 't1_dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '2048'
+      e.guest_numvcpus = '8'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+      e.guest_autostart = 'true'
     end
   end
 
 
-  # Dev-Linux
-  config.vm.define 'vm010' do |vm010|
-    vm010.vm.hostname = 'vm010'
-    vm010.vm.network 'private_network', ip: '172.16.0.10', netmask: '255.255.0.0'
-    vm010.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dev-master \"global_vm_shortname='Dev-Linux' global_vm_hostname=#{vm010.vm.hostname}\""
-    vm010.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
+  # NFS DEV
+  config.vm.define 'vm006' do |v|
+    v.vm.hostname = 'vm006'
+    v.vm.network 'private_network', ip: '172.16.0.4', netmask: '255.255.255.0', gateway: '172.16.0.1'
     
-    vm010.vm.provider :vmware_esxi do |e010|
-      e010.esxi_hostname = $esxi_ip
-      e010.esxi_username = $esxi_usr
-      e010.esxi_password = $esxi_pwd
-      
-      e010.clone_from_vm = 'vm000'
-      e010.esxi_hostport = 22
-      e010.esxi_virtual_network = ['VM Network', 'DEV Network']
+    $vm006_global_vars = "'global_vm_shortname': 'NFS DEV', 'global_vm_hostname': '#{v.vm.hostname}'"
+    
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"{#{$vm006_global_vars}}\""
 
-      e010.guest_name = vm010.vm.hostname
-      e010.guest_memsize = '6144'
-      e010.guest_numvcpus = '6'
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
       
-      e010.guest_snapshot_includememory = 'false'
-      e010.guest_snapshot_quiesced = 'false'
-      e010.guest_guestos = 'ubuntu-64'
-      e010.guest_autostart = 'true'
+      e.clone_from_vm = 'template-dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '1024'
+      e.guest_numvcpus = '2'
+
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
+    end
+  end
+
+
+  # Bastion
+  config.vm.define 'vm005' do |v|
+    v.vm.hostname = 'vm005'
+    v.vm.network 'private_network', ip: '172.16.0.201', netmask: '255.255.255.0', gateway: '172.16.0.1'
+    # v.vm.network 'private_network', ip: '172.16.1.201', netmask: '255.255.255.0'
+    
+    $vm005_remdesk_vars = "'remdesk_type': 'VNC'"
+    $vm005_global_vars = "'global_vm_shortname': 'Proxy DEV', 'global_vm_hostname': '#{v.vm.hostname}'"
+    
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"{#{$vm005_global_vars}}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
+      
+      e.clone_from_vm = 'template-dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '3072'
+      e.guest_numvcpus = '8'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
     end
   end
 
 
   # --------------- DNS ---------------
-  # DNS1-Dev
-  config.vm.define 'vm100' do |vm100|
-    vm100.vm.hostname = 'vm100'
-    vm100.vm.network 'private_network', ip: '172.16.0.30', netmask: '255.255.0.0'
-    vm100.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='DNS-1 DEV' global_vm_hostname=#{vm100.vm.hostname}\""
-    vm100.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
-    
-    vm100.vm.provider :vmware_esxi do |e100|
-      e100.esxi_hostname = $esxi_ip
-      e100.esxi_username = $esxi_usr
-      e100.esxi_password = $esxi_pwd
-      
-      e100.clone_from_vm = 'vm000'
-      e100.esxi_hostport = 22
-      e100.esxi_virtual_network = ['VM Network', 'DEV Network']
+  # LDAP-Dev
+  config.vm.define 'vm003' do |v|
+    v.vm.hostname = 'vm003'
+    v.vm.network 'private_network', ip: '172.16.0.30', netmask: '255.255.255.0', gateway: '172.16.0.1'
 
-      e100.guest_name = vm100.vm.hostname
-      e100.guest_memsize = '2048'
-      e100.guest_numvcpus = '4'
+    $vm003_dns_vars = "'dns_server_type': 'master'"
+    $vm003_global_vars = "'global_vm_shortname': 'LDAP DEV', 'global_vm_hostname': '#{v.vm.hostname}'"
+
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dns-server \"{#{$vm003_dns_vars}, #{$vm003_global_vars}}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
       
-      e100.guest_snapshot_includememory = 'false'
-      e100.guest_snapshot_quiesced = 'false'
-      e100.guest_guestos = 'ubuntu-64'
+      e.clone_from_vm = 't1_dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '3072'
+      e.guest_numvcpus = '4'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
     end
   end
 
 
-  # DNS2-Dev
-  config.vm.define 'vm101' do |vm101|
-    vm101.vm.hostname = 'vm101'
-    vm101.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.0.0'
-    vm101.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='DNS-2 DEV' global_vm_hostname=#{vm101.vm.hostname}\""
-    vm101.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
-    
-    vm101.vm.provider :vmware_esxi do |e101|
-      e101.esxi_hostname = $esxi_ip
-      e101.esxi_username = $esxi_usr
-      e101.esxi_password = $esxi_pwd
-      
-      e101.clone_from_vm = 'vm000'
-      e101.esxi_hostport = 22
-      e101.esxi_virtual_network = ['VM Network', 'DEV Network']
+  # DNS1-Dev
+  config.vm.define 'vm004' do |v|
+    v.vm.hostname = 'vm004'
+    v.vm.network 'private_network', ip: '172.16.0.31', netmask: '255.255.255.0', gateway: '172.16.0.1'
 
-      e101.guest_name = vm101.vm.hostname
-      e101.guest_memsize = '768'
-      e101.guest_numvcpus = '2'
+    $vm004_dns_vars = "'dns_server_type': 'slave', 'dns_server_masters': ['172.16.0.30']"
+    $vm004_global_vars = "'global_vm_shortname': 'DNS-1 DEV', 'global_vm_hostname': '#{v.vm.hostname}'"
+
+    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev dns-server \"{#{$vm004_dns_vars}, #{$vm004_global_vars}}\""
+    
+    v.vm.provider :vmware_esxi do |e|
+      e.esxi_hostname = $esxi_ip
+      e.esxi_username = $esxi_usr
+      e.esxi_password = $esxi_pwd
       
-      e101.guest_snapshot_includememory = 'false'
-      e101.guest_snapshot_quiesced = 'false'
-      e101.guest_guestos = 'ubuntu-64'
+      e.clone_from_vm = 't1_dev'
+      e.esxi_hostport = 22
+      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+      e.guest_name = v.vm.hostname
+      e.guest_memsize = '3072'
+      e.guest_numvcpus = '4'
+      
+      e.guest_snapshot_includememory = 'false'
+      e.guest_snapshot_quiesced = 'false'
+      e.guest_guestos = 'ubuntu-64'
     end
   end
 
 
   # --------------- Gaming ---------------
   # Terraria-1
-  config.vm.define 'vm002' do |vm002|
-    vm002.vm.hostname = 'vm002'
-    vm002.vm.network 'private_network', ip: '172.16.0.2', netmask: '255.255.0.0'
-    vm002.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"gs_type=terraria gs_overwrite=true global_vm_shortname='Terraria-1' global_vm_hostname=#{vm002.vm.hostname}\""
-    vm002.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
+#  config.vm.define 'vm002' do |v|
+#    v.vm.hostname = 'vm002'
+#    v.vm.network 'private_network', ip: '172.16.0.2', netmask: '255.255.255.0'
+
+#    $vm002_gs_vars = "'gs_game': 'terraria', 'gs_overwrite': true"
+#    $vm002_global_vars = "'global_vm_shortname': 'Terraria-1', 'global_vm_hostname': '#{v.vm.hostname}'"
+
+#    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"{#{$vm002_gs_vars}, #{$vm002_global_vars}}\""
     
-    vm002.vm.provider :vmware_esxi do |e002|
-      e002.esxi_hostname = $esxi_ip
-      e002.esxi_username = $esxi_usr
-      e002.esxi_password = $esxi_pwd
+#    v.vm.provider :vmware_esxi do |e|
+#      e.esxi_hostname = $esxi_ip
+#      e.esxi_username = $esxi_usr
+#      e.esxi_password = $esxi_pwd
       
-      e002.clone_from_vm = 'vm000'
-      e002.esxi_hostport = 22
-      e002.esxi_virtual_network = ['VM Network', 'DEV Network']
+#      e.clone_from_vm = 'template-dev'
+#      e.esxi_hostport = 22
+#      e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e002.guest_name = vm002.vm.hostname
-      e002.guest_memsize = '4096'
-      e002.guest_numvcpus = '4'
+#      e.guest_name = v.vm.hostname
+#      e.guest_memsize = '4096'
+#      e.guest_numvcpus = '4'
       
-      e002.guest_snapshot_includememory = 'false'
-      e002.guest_snapshot_quiesced = 'false'
-      e002.guest_guestos = 'ubuntu-64'
-    end
-  end
+#      e.guest_snapshot_includememory = 'false'
+#      e.guest_snapshot_quiesced = 'false'
+#      e.guest_guestos = 'ubuntu-64'
+#    end
+#  end
 
 
-# Minecraft-1
-  config.vm.define 'vm003' do |vm003|
-    vm003.vm.hostname = 'vm003'
-    vm003.vm.network 'private_network', ip: '172.16.0.3', netmask: '255.255.0.0'
-    vm003.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev general \"global_vm_shortname='Minecraft-1' global_vm_hostname=#{vm003.vm.hostname}\""  # subject to change
-    vm003.vm.provision 'shell', inline: 'systemctl start disable-ipv6', :run => 'always'
+# Minecraft-1 Vanilla
+#  config.vm.define 'vm003' do |v|
+#    v.vm.hostname = 'vm003'
+#    v.vm.network 'private_network', ip: '172.16.0.3', netmask: '255.255.255.0'
+
+#    $vm003_gs_vars = "'gs_game': 'minecraft', 'gs_overwrite': true"
+#    $vm003_global_vars = "'global_vm_shortname': 'Minecraft-1 Vanilla', 'global_vm_hostname': '#{v.vm.hostname}'"
+
+#    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"{#{$vm003_gs_vars}, #{$vm003_global_vars}}\""
     
-    vm003.vm.provider :vmware_esxi do |e003|
-      e003.esxi_hostname = $esxi_ip
-      e003.esxi_username = $esxi_usr
-      e003.esxi_password = $esxi_pwd
+#    v.vm.provider :vmware_esxi do |e|
+#      e.esxi_hostname = $esxi_ip
+#      e.esxi_username = $esxi_usr
+#      e.esxi_password = $esxi_pwd
       
-      e003.clone_from_vm = 'vm000'
-      e003.esxi_hostport = 22
-      e003.esxi_virtual_network = ['VM Network', 'DEV Network']
+#      e.clone_from_vm = 'template-dev'
+#      e.esxi_hostport = 22
+#      e.esxi_virtual_network = ['VM Network', 'DEV Network']
 
-      e003.guest_name = vm003.vm.hostname
-      e003.guest_memsize = '8192'
-      e003.guest_numvcpus = '6'
+#      e.guest_name = v.vm.hostname
+#      e.guest_memsize = '8192'
+#      e.guest_numvcpus = '6'
       
-      e003.guest_snapshot_includememory = 'false'
-      e003.guest_snapshot_quiesced = 'false'
-      e003.guest_guestos = 'ubuntu-64'
-    end
-  end
+#      e.guest_snapshot_includememory = 'false'
+#      e.guest_snapshot_quiesced = 'false'
+#      e.guest_guestos = 'ubuntu-64'
+#    end
+#  end
+
+
+  # Minecraft-2 New Beginnings
+#  config.vm.define 'vm005' do |v|
+#    v.vm.hostname = 'vm005'
+#    v.vm.network 'private_network', ip: '172.16.0.5', netmask: '255.255.255.0'
+    
+#    $vm005_gs_vars = "'gs_game': 'minecraft', 'gs_overwrite': true, 'gs_mc_ram': '6656M', 'gs_mc_link': 'https://edge.forgecdn.net/files/3204/605/HR%20New%20Beginnings%20Server.zip'"
+#    $vm005_global_vars = "'global_vm_shortname': 'Minecraft-2 New Beginnings', 'global_vm_hostname': '#{v.vm.hostname}'"
+    
+#    v.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev game-server \"{#{$vm005_gs_vars}, #{$vm005_global_vars}}\""
+    
+#    v.vm.provider :vmware_esxi do |e|
+#      e.esxi_hostname = $esxi_ip
+#      e.esxi_username = $esxi_usr
+#      e.esxi_password = $esxi_pwd
+
+#      e.clone_from_vm = 'template-dev'
+#      e.esxi_hostport = 22
+#      e.esxi_virtual_network = ['VM Network', 'DEV Network']
+
+#      e.guest_name = v.vm.hostname
+#      e.guest_memsize = '8192'
+#      e.guest_numvcpus = '8'
+      
+#      e.guest_snapshot_includememory = 'false'
+#      e.guest_snapshot_quiesced = 'false'
+#      e.guest_guestos = 'ubuntu-64'
+#    end
+#  end
 
 end
