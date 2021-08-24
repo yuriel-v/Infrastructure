@@ -77,7 +77,7 @@ Requirements for any template:
 - Default editor set to vim
 - Up-to-date packages
 - Disabled IPv6 (we don't use that here)
-- Disabled password-based SSH access (except for the Ansible VM which should listen to)
+- Disabled password-based SSH access (except for the Ansible VM which should allow password-based SSH from the internal network only)
 
 If using Vagrant:
 - Main user `vagrant` with sudo password prompt disabled and password set to `vagrant`
@@ -86,7 +86,6 @@ If using Vagrant:
 ## Phase 4: VM specifics
 -> Nexus
   - XRDP **or** VNC
-    - If RDP, add `dconf-editor` and `gnome-tweak-tool`
   - Remmina
   - VSCode
   - Java/Maven
@@ -98,6 +97,9 @@ If using Vagrant:
 -> XRDP on Nexus
   - Install XRDP
   - Add user `xrdp` to `ssl-cert` group
+  - Template .pkla file to avoid additional password prompts or unusual "crashes"
+  - Enable xrdp systemd service on boot
+  - Install `dconf-editor` and `gnome-tweak-tool` because initially, things will look screwed up
 
 ## Phase ???: Author
 
