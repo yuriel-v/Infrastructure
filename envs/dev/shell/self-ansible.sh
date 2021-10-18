@@ -17,14 +17,14 @@
 #      - template-vm
 #      - dev-master
 #      - game-server
-#      - dns (to be implemented!)
+#      - dns-server
 # <extra-vars>: Any extra variables to pass for the Ansible
 #               role called by the type above. Must be passed
 #               as a single string, between single or double
 #               quotes!
 #
 # -> Mandatory extra vars include:
-#    - global_vm_shortname: The machine's short name, as it
+#    - global_vm_shortname: The machine's description, as it
 #                           should appear on the terminal
 #                           prompt in blue;
 #    - global_vm_hostname: The machine's computer name, as
@@ -35,7 +35,7 @@
 # (...)/self-ansible.sh dev general "global_vm_shortname='Test VM' global_vm_hostname='vm123'"
 
 type=$2
-extra_vars=$3
+extra_vars=${3//\'/\"}
 network=0
 
 if [ "$1" = "prd" ]; then
@@ -43,16 +43,18 @@ if [ "$1" = "prd" ]; then
 fi
 
 selfip=`ip a | grep 'inet.*' | grep '.*scope global' | grep -v 'dynamic' | grep -o "172\.16\.$network\.[0-9]*" | grep -v "172\.16\.$network\.255" | tail -n 1`
+id_ansible=`curl -s http://172.16.0.100:4960/getkey | grep -o "ssh-rsa[^\"]*"`
 
-# actually fine to place these on git since password is only accepted among the internal network
+# ok to change to vagrant user from this point on
+su vagrant
 
-echo '-> (self-ansible.sh) Fetching and adding Ansible public key to authorized keys'
-cat_cmd="cat /home/vagrant/.ssh/ansible/id_ansible.pub"
-sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 $cat_cmd | grep -o "^ssh-rsa.*" >> /home/vagrant/.ssh/authorized_keys
+mkdir -p -m755 "/home/vagrant/.ssh"
+if ! grep -q "$id_ansible" /home/vagrant/.ssh/authorized_keys 2>/dev/null; then
+  echo '-> (self-ansible.sh) Adding Ansible public key to authorized keys'
+  echo $id_ansible >> /home/vagrant/.ssh/authorized_keys
+fi
+chmod 0600 /home/vagrant/.ssh/authorized_keys
 
 echo '-> (self-ansible.sh) Starting global provisioning play'
-# avoid host-checking issues
-# sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "rm /home/vagrant/.ssh/known_hosts"
-ansible_cmd="ansible-playbook /home/vagrant/ansible/global.yml -i ${selfip}, --tags \"$type\" --extra-vars \"$extra_vars\""
-sshpass -p "vagrant" ssh -tt -o StrictHostKeyChecking=no vagrant@172.16.$network.100 "$ansible_cmd"
-
+echo '  -> The logs will not be shown here, but are available in the Ansible host.'
+curl -X POST http://172.16.0.100:4960/provision -H "Content-Type: application/json" -d "{\"type\": \"$type\", \"ip\": \"$selfip\", \"extras\": $extra_vars}" > /dev/null 2>&1
