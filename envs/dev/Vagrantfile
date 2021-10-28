@@ -7,10 +7,6 @@ Uses the plugin 'vmware_esxi' for Vagrant. Link below:
 https://github.com/josenk/vagrant-vmware-esxi
 """
 
-$esxi_ip = '172.16.0.101'
-$esxi_usr = 'root'
-$esxi_pwd = 'env:ESXI_ROOTPW'
-
 $wget_insecure_key = <<-SCRIPT
 wget -O /home/vagrant/.ssh/vagrant.pub https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub > /dev/null 2>&1
 cat /home/vagrant/.ssh/vagrant.pub > /home/vagrant/.ssh/authorized_keys
@@ -18,10 +14,23 @@ SCRIPT
 
 
 def decide_template(guest_os)
-  if guest_os.start_with?('ubuntu')
-    return 't1_dev'
-  elsif guest_os.start_with?('centos')
-    return 't2_dev_centos'
+  if guest_os == "ubuntu-server"
+    return 'yurielnet/t1_dev_ubuntu'
+  elsif guest_os == "centos-server"
+    return 'yurielnet/t2_dev_centos'
+  elsif guest_os == "linux-desktop"
+    return 'yurielnet/t3_dev_mint'
+  else
+    return nil
+  end
+end
+
+
+def decide_network(gateways)
+  if gateways.include? "172.16.0.1"
+    return "development"
+  elsif gateways.include? "172.16.1.1"
+    return "production"
   else
     return nil
   end
@@ -32,12 +41,12 @@ end
 lab = {
   "vm999" => {  # Testing, testing
     "type" => "general",
-    "ip" => "172.16.0.250",
+    "networks" => {"172.16.0.1" => "172.16.0.250"},
     "global_vars" => "'desc': 'Test VM', 'name': 'vm999'",
     "extra_vars" => "'dns_server_type': 'master'",
     "memory" => "1024",
     "vcpus" => "2",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   },
 }
 
@@ -45,62 +54,65 @@ lab = {
 general_purpose = {
   "vm001" => {  # Ansible controller
     "type" => "general",
-    "ip" => "172.16.0.100",
+    "networks" => {"172.16.0.1" => "172.16.0.100"},
     "global_vars" => "'desc': 'Ansible DEV', 'name': 'vm001'",
     "extra_vars" => "ansible",
     "memory" => "2048",
     "vcpus" => "4",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   },
 
   "vm002" => {  # Nexus
     "type" => "dev-master",
-    "ip" => "172.16.0.200",
+    "networks" => {"172.16.0.1" => "172.16.0.200"},
     "global_vars" => "'desc': 'Nexus', 'name': 'vm002'",
     "extra_vars" => "'devinstall_remdesk': 'rdp'",
     "memory" => "8192",
     "vcpus" => "4",
-    "guest_os" => "ubuntu-64"
+    "guest_os" => "linux-desktop"
   },
 
   "vm005" => {  # Bastion jump server, kind of abandoned thanks to vm007
     "type" => "general",  # to be changed
-    "ip" => "172.16.0.5",
+    "networks" => {
+      "172.16.0.1" => "172.16.0.5",
+      "172.16.1.1" => "172.16.1.5"
+    },
     "global_vars" => "'desc': 'Bastion DEV', 'name': 'vm005'",
-    "extra_vars" => "'remdesk_type': 'vnc'",
+    "extra_vars" => nil,
     "memory" => "3072",
     "vcpus" => "4",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   },
 
   "vm006" => {  # NFS
     "type" => "general",
-    "ip" => "172.16.0.6",
+    "networks" => {"172.16.0.1" => "172.16.0.6"},
     "global_vars" => "'desc': 'NFS DEV', 'name': 'vm006'",
     "extra_vars" => nil,
     "memory" => "1024",
     "vcpus" => "2",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   },
 
   "vm007" => {  # Dev-Linux
     "type" => "dev-master",
-    "ip" => "172.16.0.201",
+    "networks" => {"172.16.0.1" => "172.16.0.201"},
     "global_vars" => "'desc': 'Dev-Linux', 'name': 'vm007'",
     "extra_vars" => "'devinstall_remdesk': 'rdp'",
     "memory" => "10240",
     "vcpus" => "6",
-    "guest_os" => "ubuntu-64"
+    "guest_os" => "linux-desktop"
   },
 
   "vm008" => {  # Oracle (challenge API)
     "type" => "general",
-    "ip" => "172.16.0.8",
+    "networks" => {"172.16.0.1" => "172.16.0.8"},
     "global_vars" => "'desc': 'Oracle', 'name': 'vm008'",
     "extra_vars" => nil,
     "memory" => "2048",
     "vcpus" => "2",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   }
 }
 
@@ -108,57 +120,96 @@ general_purpose = {
 dns = {
   "vm003" => {  # LDAP DEV, for now only a DNS master
     "type" => "dns-server",
-    "ip" => "172.16.0.30",
+    "networks" => {"172.16.0.1" => "172.16.0.30"},
     "global_vars" => "'desc': 'LDAP DEV', 'name': 'vm003'",
     "extra_vars" => "'dns_server_type': 'master'",
     "memory" => "1024",
     "vcpus" => "2",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   },
 
   "vm004" => {  # DNS-1 DEV, DNS slave
     "type" => "dns-server",
-    "ip" => "172.16.0.31",
+    "networks" => {"172.16.0.1" => "172.16.0.31"},
     "global_vars" => "'desc': 'DNS-1 DEV', 'name': 'vm004'",
     "extra_vars" => "'dns_server_type': 'slave', 'dns_server_masters': ['172.16.0.30']",
     "memory" => "1024",
     "vcpus" => "2",
-    "guest_os" => "centos8-64"
+    "guest_os" => "centos-server"
   }
 }
 
 # Gaming VMs go here
-# gaming = {}
+gaming = {
+    "vm009" => {  # Factorio-1
+      "type" => "general",    # to be changed to game-server later
+      "networks" => {"172.16.0.1" => "172.16.0.9"},
+      "global_vars" => "'desc': 'Factorio-1', 'name': 'vm009'",
+      "extra_vars" => nil,
+      "memory" => "4096",
+      "vcpus" => "4",
+      "guest_os" => "centos-server"
+    }
+}
 
 
 Vagrant.configure('2') do |config|
-  environment = [lab, general_purpose, dns]
+  environment = [lab, general_purpose, dns, gaming]
 
   environment.each do |category|
     category.each do |vm_name, cfg|
-      config.vm.box = 'esxi_clone/dummy'
-      config.vm.synced_folder('.', '/vagrant', type: 'nfs', disabled: true)
+      config.vm.box = decide_template(cfg['guest_os'])
+      config.vm.synced_folder('.', '/vagrant', disabled: true)
+      config.ssh.insert_key = true
 
       config.vm.define vm_name do |machine|
         machine.vm.hostname = vm_name
-        machine.vm.network 'private_network', ip: cfg["ip"], netmask: '255.255.255.0', gateway: '172.16.0.1'
+
+        cfg["networks"].each do |gw, ip_addr|
+            machine.vm.network :private_network,
+              :ip => ip_addr,
+              :libvirt__network_name => gw == "172.16.0.1" ? "dev" : "prd",
+              :libvirt__netmask => '255.255.255.0',
+              :gateway => gw,
+              :libvirt__guest_ipv6 => "no",
+              :libvirt__domain_mane => "yuriel.net",
+              :autostart => true
+        end
 
         machine.vm.provision 'shell', path: './shell/ansible.sh' if cfg["extra_vars"] == "ansible"
         machine.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev #{cfg['type']} \"{#{cfg['global_vars']}#{', ' + cfg['extra_vars'] if !(cfg['extra_vars'].nil? || cfg['extra_vars'] == 'ansible' )}}\""
 
-        machine.vm.provider :vmware_esxi do |e|
-          e.esxi_hostname = $esxi_ip
-          e.esxi_username = $esxi_usr
-          e.esxi_password = $esxi_pwd
+        machine.vm.provider :libvirt do |p|
+          p.driver = "kvm"
+          p.title = "yurielnet"
+          p.default_prefix = ""
+          p.storage_pool_name = decide_network(cfg['networks'].keys)
+          
+          p.memory = cfg['memory']
+          p.cpus = cfg['vcpus']
+          p.machine_virtual_size = 50
+           
+          p.management_network_name = "default"
+          p.management_network_address = "172.30.0.0/16"
+          p.management_network_mode = "nat"
+          p.management_network_guest_ipv6 = false
 
-          e.clone_from_vm = decide_template(cfg['guest_os'])
-          e.guest_memsize = cfg['memory']
-          e.guest_numvcpus = cfg['vcpus']
-
-          e.guest_snapshot_includememory = 'false'
-          e.guest_snapshot_quiesced = 'false'
-          e.guest_guestos = cfg['guest_os']
+          p.watchdog :model => 'i6300esb', :action => 'reset'
         end
+
+#        machine.vm.provider :vmware_esxi do |e|
+#          e.esxi_hostname = $esxi_ip
+#          e.esxi_username = $esxi_usr
+#          e.esxi_password = $esxi_pwd
+
+#          e.clone_from_vm = decide_template(cfg['guest_os'])
+#          e.guest_memsize = cfg['memory']
+#          e.guest_numvcpus = cfg['vcpus']
+
+#          e.guest_snapshot_includememory = 'false'
+#          e.guest_snapshot_quiesced = 'false'
+#          e.guest_guestos = cfg['guest_os']
+#        end
       end
     end
   end
@@ -192,7 +243,7 @@ end
       
   #     e.guest_snapshot_includememory = 'false'
   #     e.guest_snapshot_quiesced = 'false'
-  #     e.guest_guestos = 'centos8-64'
+  #     e.guest_guestos = 'centos-server'
   #   end
   # end
 
