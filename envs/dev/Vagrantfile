@@ -188,6 +188,11 @@ Vagrant.configure('2') do |config|
           p.memory = cfg['memory']
           p.cpus = cfg['vcpus']
           p.machine_virtual_size = 50
+
+          p.graphics_type = "vnc"
+          p.graphics_ip = "0.0.0.0"
+          p.graphics_autoport = true
+          p.keymap = "pt-br"
            
           p.management_network_name = "default"
           p.management_network_address = "172.30.0.0/16"
