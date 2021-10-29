@@ -57,4 +57,11 @@ chmod 0600 /home/vagrant/.ssh/authorized_keys
 
 echo '-> (self-ansible.sh) Starting global provisioning play'
 echo '  -> The logs will not be shown here, but are available in the Ansible host.'
-curl -X POST http://172.16.0.100:4960/provision -H "Content-Type: application/json" -d "{\"type\": \"$type\", \"ip\": \"$selfip\", \"extras\": $extra_vars}" > /dev/null 2>&1
+response=$(curl -X POST http://172.16.0.100:4960/provision -H "Content-Type: application/json" -d "{\"type\": \"$type\", \"ip\": \"$selfip\", \"extras\": $extra_vars}" 2>&1)
+
+if [ ! $? -eq 0 ]; then
+    echo "$response"
+    echo "The command failed. See above for details."
+else
+    echo "Ansible has been fired successfully."
+fi
