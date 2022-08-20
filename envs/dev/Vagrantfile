@@ -17,12 +17,15 @@ Do put that license note on substantial parts of the code though.
 Yes, that LICENSE.md thing on the repo root.
 """
 
+
+# Insecure Vagrant PK import script for creating new templates
 $wget_insecure_key = <<-SCRIPT
 wget -O /home/vagrant/.ssh/vagrant.pub https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub > /dev/null 2>&1
 cat /home/vagrant/.ssh/vagrant.pub > /home/vagrant/.ssh/authorized_keys
 SCRIPT
 
 
+# Utility functions
 def decide_template(guest_os)
   if guest_os == "ubuntu-server"
     return "yurielnet/t1_dev_ubuntu"
@@ -50,223 +53,70 @@ def decide_network(gateways)
 end
 
 
-# VM categories
-lab = {
-  "vm999" => {  # Testing, testing
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.250"},
-    "global_vars" => "'desc': 'Test VM', 'name': 'vm999'",
-    "extra_vars" => "'dns_server_type': 'master'",
-    "memory" => "1024",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  },
-}
+# Import the actual configs
+require 'yaml'
+
+lab = YAML.load_file('lab.yml')
+general_purpose = YAML.load_file('general.yml')
+dns = YAML.load_file('dns.yml')
+gaming = YAML.load_file('gaming.yml')
+web = YAML.load_file('web.yml')
 
 
-general_purpose = {
-  "vm001" => {  # Ansible controller
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.100"},
-    "global_vars" => "'desc': 'Ansible DEV', 'name': 'vm001'",
-    "extra_vars" => "ansible",
-    "memory" => "1024",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  },
-
-  "vm002" => {  # Nexus
-    "type" => "dev-master",
-    "networks" => {"172.16.0.1" => "172.16.0.200"},
-    "global_vars" => "'desc': 'Nexus', 'name': 'vm002'",
-    "extra_vars" => "'devinstall_remdesk': 'rdp', 'devinstall_add_lxde': false",
-    "memory" => "8192",
-    "vcpus" => "4",
-    "guest_os" => "linux-desktop"
-  },
-
-  "vm005" => {  # Bastion jump server
-    "type" => "general",  # to be changed
-    "networks" => {
-      "172.16.0.1" => "172.16.0.5",
-      "172.16.1.1" => "172.16.1.5"
-    },
-    "global_vars" => "'desc': 'Bastion DEV', 'name': 'vm005'",
-    "extra_vars" => nil,
-    "memory" => "3072",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  },
-
-  "vm006" => {  # NFS
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.6"},
-    "global_vars" => "'desc': 'NFS DEV', 'name': 'vm006'",
-    "extra_vars" => nil,
-    "memory" => "1024",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  },
-
-  "vm008" => {  # Oracle (challenge API)
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.8"},
-    "global_vars" => "'desc': 'Oracle', 'name': 'vm008'",
-    "extra_vars" => nil,
-    "memory" => "2048",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  },
-
-  "vm014" => {  # Docker host
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.14"},
-    "global_vars" => "'desc': 'Docker DEV', 'name': 'vm014'",
-    "extra_vars" => nil,
-    "memory" => "8192",
-    "vcpus" => "8",
-    "guest_os" => "centos-server"
-  }
-}
-
-
-dns = {
-  "vm003" => {  # LDAP DEV, for now only a DNS master
-    "type" => "dns-server",
-    "networks" => {"172.16.0.1" => "172.16.0.30"},
-    "global_vars" => "'desc': 'LDAP DEV', 'name': 'vm003'",
-    "extra_vars" => "'dns_server_type': 'master'",
-    "memory" => "512",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  },
-
-  "vm004" => {  # DNS-1 DEV, DNS slave
-    "type" => "dns-server",
-    "networks" => {"172.16.0.1" => "172.16.0.31"},
-    "global_vars" => "'desc': 'DNS-1 DEV', 'name': 'vm004'",
-    "extra_vars" => "'dns_server_type': 'slave', 'dns_server_masters': ['172.16.0.30']",
-    "memory" => "512",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  }
-}
-
-# Gaming VMs go here
-gaming = {
-  "vm007" => {  # Minecraft-modded
-    "type" => "game-server",
-    "networks" => {"172.16.0.1" => "172.16.0.7"},
-    "global_vars" => "'desc': 'Minecraft-modded', 'name': 'vm007'",
-    "extra_vars" => "'gs_game': 'minecraft', 'gs_mc_link': 'https://edge.forgecdn.net/files/3645/604/SIMPLE-SERVER-FILES-0.2.41.zip'",  # installs "All the Mods 7"
-    "memory" => "8192",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  },
-  "vm009" => {  # Factorio-1
-    "type" => "general",    # to be changed to game-server later
-    "networks" => {"172.16.0.1" => "172.16.0.9"},
-    "global_vars" => "'desc': 'Factorio-1', 'name': 'vm009'",
-    "extra_vars" => nil,
-    "memory" => "4096",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  },
-  "vm011" => {  # Satisfactory
-    "type" => "general",  # to be changed later, maybe
-    "networks" => {"172.16.0.1" => "172.16.0.11"},
-    "global_vars" => "'desc': 'Satisfactory-Dedicated', 'name': 'vm011'",
-    "extra_vars" => nil,
-    "memory" => "8192",
-    "vcpus" => "2",
-    "guest_os" => "centos-server"
-  },
-  "vm015" => {  # MC-Valhelsia3
-    "type" => "game-server",
-    "networks" => {"172.16.0.1" => "172.16.0.15"},
-    "global_vars" => "'desc': 'MC-Valhelsia3', 'name': 'vm015'",
-    "extra_vars" => "'gs_game': 'minecraft', 'gs_mc_link': 'https://mediafiles.forgecdn.net/files/3707/304/Valhelsia+3-3.5.1-SERVER.zip', 'gs_install_zerotier': false, 'gs_server_ip': '172.16.0.15'",  # installs "Valhelsia 3"
-    "memory" => "8192",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  }
-}
-
-# Webapps, front and back-end alike
-web = {
-  "vm012" => {  # Light back-ends
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.12"},
-    "global_vars" => "'desc': 'Light-backends', 'name': 'vm012'",
-    "extra_vars" => nil,
-    "memory" => "2048",
-    "vcpus" => "8",
-    "guest_os" => "centos-server"
-  },
-  "vm013" => {  # DB1-MySQL
-    "type" => "general",
-    "networks" => {"172.16.0.1" => "172.16.0.13"},
-    "global_vars" => "'desc': 'DB1-MySQL', 'name': 'vm013'",
-    "extra_vars" => nil,
-    "memory" => "768",
-    "vcpus" => "4",
-    "guest_os" => "centos-server"
-  }
-}
-
-
+# Actually run Vagrant
 Vagrant.configure('2') do |config|
   environment = [lab, general_purpose, dns, gaming, web]
 
   environment.each do |category|
-    category.each do |vm_name, cfg|
-      config.vm.synced_folder('.', '/vagrant', disabled: true)
-      config.ssh.insert_key = true
+    category.each do |vm|
+      vm.each do |vm_name, cfg|
+        config.vm.synced_folder('.', '/vagrant', disabled: true)
+        config.ssh.insert_key = true
 
-      config.vm.define vm_name do |machine|
-        machine.vm.hostname = vm_name
-        machine.vm.box = decide_template(cfg["guest_os"])
+        config.vm.define vm_name do |machine|
+          machine.vm.hostname = vm_name
+          machine.vm.box = decide_template(cfg["guest_os"])
 
-        cfg["networks"].each do |gw, ip_addr|
-            machine.vm.network :private_network,
-              :ip => ip_addr,
-              :libvirt__network_name => gw == "172.16.0.1" ? "dev" : "prd",
-              :libvirt__netmask => '255.255.255.0',
-              :gateway => gw,
-              :libvirt__guest_ipv6 => "no",
-              :libvirt__domain_mane => "yuriel.net",
-              :autostart => true
+          cfg["networks"].each do |gw, ip_addr|
+              machine.vm.network :private_network,
+                :ip => ip_addr,
+                :libvirt__network_name => gw == "172.16.0.1" ? "dev" : "prd",
+                :libvirt__netmask => '255.255.255.0',
+                :gateway => gw,
+                :libvirt__guest_ipv6 => "no",
+                :libvirt__domain_mane => "yuriel.net",
+                :autostart => true
+          end
+
+          machine.vm.provision 'shell', path: './shell/ansible.sh' if cfg["extra_vars"] == "ansible"
+          machine.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev #{cfg['type']} \"{#{cfg['global_vars']}#{', ' + cfg['extra_vars'] if !(cfg['extra_vars'].nil? || cfg['extra_vars'] == 'ansible' )}}\""
+
+          machine.vm.provider :libvirt do |p|
+            p.driver = "kvm"
+            p.title = "yurielnet"
+            p.default_prefix = ""
+            p.storage_pool_name = decide_network(cfg['networks'].keys)
+
+            p.memory = cfg['memory']
+            p.cpus = cfg['vcpus']
+            p.cpu_model = "kvm64"
+            p.machine_virtual_size = 50
+
+            p.graphics_type = "vnc"
+            p.graphics_ip = "0.0.0.0"
+            p.graphics_autoport = true
+            p.keymap = "pt-br"
+
+            p.management_network_name = "default"
+            p.management_network_address = "172.30.0.0/16"
+            p.management_network_mode = "nat"
+            p.management_network_guest_ipv6 = false
+
+            p.watchdog :model => 'i6300esb', :action => 'reset'
+          end
         end
-
-        machine.vm.provision 'shell', path: './shell/ansible.sh' if cfg["extra_vars"] == "ansible"
-        machine.vm.provision 'shell', path: './shell/self-ansible.sh', args: "dev #{cfg['type']} \"{#{cfg['global_vars']}#{', ' + cfg['extra_vars'] if !(cfg['extra_vars'].nil? || cfg['extra_vars'] == 'ansible' )}}\""
-
-        machine.vm.provider :libvirt do |p|
-          p.driver = "kvm"
-          p.title = "yurielnet"
-          p.default_prefix = ""
-          p.storage_pool_name = decide_network(cfg['networks'].keys)
-          
-          p.memory = cfg['memory']
-          p.cpus = cfg['vcpus']
-          p.cpu_model = "kvm64"
-          p.machine_virtual_size = 50
-
-          p.graphics_type = "vnc"
-          p.graphics_ip = "0.0.0.0"
-          p.graphics_autoport = true
-          p.keymap = "pt-br"
-           
-          p.management_network_name = "default"
-          p.management_network_address = "172.30.0.0/16"
-          p.management_network_mode = "nat"
-          p.management_network_guest_ipv6 = false
-
-          p.watchdog :model => 'i6300esb', :action => 'reset'
-        end
-
       end
     end
   end
 end
-
+      

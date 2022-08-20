@@ -1,0 +1,55 @@
+---
+# General-purpose machines
+
+- vm001:  # Ansible master
+    type: general
+    networks:
+      "172.16.0.1": "172.16.0.100"
+    global_vars: "'desc': 'Ansible DEV', 'name': 'vm001'"
+    extra_vars: "ansible"
+    memory: "1024"
+    vcpus: "4"
+    guest_os: centos-server
+
+- vm002:  # Nexus
+    type: dev-master
+    networks:
+      "172.16.0.1": "172.16.0.200"
+    global_vars: "'desc': 'Nexus', 'name': 'vm002'"
+    extra_vars: "'devinstall_remdesk': 'rdp', 'devinstall_add_lxde': false"
+    memory: "8192"
+    vcpus: "4"
+    guest_os: linux-desktop
+
+- vm005:  # Bastion
+    type: general
+    networks:
+      "172.16.0.1": "172.16.0.5"
+      "172.16.1.1": "172.16.1.5"
+    global_vars: "'desc': 'Bastion DEV', 'name': 'vm005'"
+    extra_vars: null
+    memory: "3072"
+    vcpus: "4"
+    guest_os: centos-server
+
+- vm006:  # NFS
+    type: general
+    networks:
+      "172.16.0.1": "172.16.0.6"
+    global_vars: "'desc': 'NFS DEV', 'name': 'vm006'"
+    extra_vars: null
+    memory: "1024"
+    vcpus: "2"
+    guest_os: centos-server
+
+# vm008 removed due to being obsolete
+- vm014:  # Docker host
+    type: general
+    networks:
+      "172.16.0.1": "172.16.0.14"
+    global_vars: "'desc': 'Docker DEV', 'name': 'vm014'"
+    extra_vars: null
+    memory: "8192"
+    vcpus: "8"
+    guest_os: centos-server
+

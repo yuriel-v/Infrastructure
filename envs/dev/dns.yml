@@ -1,0 +1,23 @@
+---
+# DNS-related machines (to be changed to LDAP in a far future)
+
+- vm003:  # DNS master, future LDAP master
+    type: dns-server
+    networks:
+      "172.16.0.1": "172.16.0.30"
+    global_vars: "'desc': 'LDAP DEV', 'name': 'vm003'"
+    extra_vars: "'dns_server_type': 'master'"
+    memory: "512"
+    vcpus: "2"
+    guest_os: centos-server
+
+- vm004:  # DNS slave
+    type: dns-server
+    networks:
+      "172.16.0.1": "172.16.0.30"
+    global_vars: "'desc': 'DNS-1 DEV', 'name': 'vm004'"
+    extra_vars: "'dns_server_type': 'slave', 'dns_server_masters': ['172.16.0.30']"
+    memory: "512"
+    vcpus: "2"
+    guest_os: centos-server
+
