@@ -87,7 +87,7 @@ general_purpose = {
     "guest_os" => "linux-desktop"
   },
 
-  "vm005" => {  # Bastion jump server, kind of abandoned thanks to vm007
+  "vm005" => {  # Bastion jump server
     "type" => "general",  # to be changed
     "networks" => {
       "172.16.0.1" => "172.16.0.5",
