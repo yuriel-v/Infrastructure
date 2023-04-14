@@ -1,12 +1,12 @@
 ---
 # Gaming-type machines, aka game servers
 
-- vm007:  # Minecraft 1 (last played ATM7)
+- vm007:  # Minecraft 1 (last played Medieval Minecraft Fabric)
     type: game-server
     networks:
       "172.16.0.1": "172.16.0.7"
-    global_vars: "'desc': 'Minecraft-modded', 'name': 'vm007'"
-    extra_vars: "'gs_game': 'minecraft', 'gs_mc_link': 'https://edge.forgecdn.net/files/3645/604/SIMPLE-SERVER-FILES-0.2.41.zip', 'gs_install_zerotier': false, 'gs_server_ip': '172.16.0.7'"
+    global_vars: "'desc': 'Minecraft-MedievalFabric', 'name': 'vm007'"
+    extra_vars: "'gs_game': 'minecraft', 'gs_mc_link': 'https://edge.forgecdn.net/files/4160/224/Medieval%20MC%20FABRIC%20Server%20Pack%201.19.2%20v14.5.zip', 'gs_install_zerotier': false, 'gs_server_ip': '172.16.0.7', 'gs_overwrite': 'soft'"
     memory: "8192"
     vcpus: "4"
     guest_os: centos-server
