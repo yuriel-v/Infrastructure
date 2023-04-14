@@ -1,0 +1,14 @@
+---
+# Web-based machines, like APIs and databases
+
+# vm012 rendered obsolete by Docker host
+- vm013:  # DB 1: MySQL
+    type: "general"  # to be changed, maybe
+    networks:
+      "172.16.0.1": "172.16.0.13"
+    global_vars: "'desc': 'DB1-MySQL', 'name': 'vm013'"
+    extra_vars: null
+    memory: "768"
+    vcpus: "4"
+    guest_os: centos-server
+

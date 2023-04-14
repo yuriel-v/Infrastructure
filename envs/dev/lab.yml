@@ -1,0 +1,13 @@
+---
+# Lab-type machines
+# Currently only one, might need more if anything
+
+- vm999:
+    type: general
+    networks:
+      "172.16.0.1": "172.16.0.250"
+    global_vars: "'desc': 'Test VM', 'name': 'vm999'"
+    extra_vars: "'dns_server_type': 'master'"
+    memory: "1024"
+    vcpus: "2"
+    guest_os: centos-server
